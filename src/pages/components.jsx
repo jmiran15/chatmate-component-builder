@@ -5,9 +5,9 @@ import {
   Group,
   Stack,
   TextInput,
-  Text,
   Space,
   NativeSelect,
+  Textarea,
 } from "@mantine/core";
 import React, { useState } from "react";
 
@@ -74,20 +74,22 @@ function ListItem({ item, dispatch, allItems }) {
   };
 
   return (
-    <Card withBorder padding="lg" radius="lg" w={400}>
-      <div>
-        <Text size="lg">id: {item.id}</Text>
-        <Text size="lg">name: {item.name}</Text>
-        <Text size="lg">system: {item.system}</Text>
-        <Text size="lg">user: {item.user}</Text>
-        <Text size="lg">chain: {item.chain}</Text>
-      </div>
+    <Card withBorder padding="lg" radius="lg" w={600}>
       <pre
         style={{
           overflowX: "auto",
         }}
       >
-        <code>{JSON.stringify(availableVariables, null, 2)}</code>
+        <code>
+          {JSON.stringify(
+            {
+              ...item,
+              availableVariables,
+            },
+            null,
+            2
+          )}
+        </code>
       </pre>
       <Space />
       <Flex id={item.id} direction="column" gap="xs">
@@ -96,16 +98,24 @@ function ListItem({ item, dispatch, allItems }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <TextInput
-          label="system"
+        <Textarea
+          label="system message"
+          autosize
+          minRows={2}
+          maxRows={4}
           value={system}
           onChange={(e) => setSystem(e.target.value)}
         />
-        <TextInput
-          label="user"
+
+        <Textarea
+          label="user message"
+          autosize
+          minRows={2}
+          maxRows={4}
           value={user}
           onChange={(e) => setUser(e.target.value)}
         />
+
         <NativeSelect
           label="chain"
           value={chain}

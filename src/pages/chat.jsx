@@ -41,7 +41,7 @@ export default function Chat({ state }) {
     setMessages([]);
   }, [state]);
 
-  function sendQuery() {
+  async function sendQuery() {
     if (query === "") return;
 
     let referenceId = uuidv4();
@@ -59,9 +59,12 @@ export default function Chat({ state }) {
 
     let allVariables = state.flat().map((item) => item.id);
 
-    state.map((row) =>
-      Promise.all(
-        row.map((column) => {
+    for (let i = 0; i < state.length; i++) {
+      console.log("processing: ", state[i]);
+      console.log("messages: ", { messages, newMessages });
+
+      let res = await Promise.all(
+        state[i].map((column) => {
           let systemMessage = column.system;
           let userMessage = column.user;
 
@@ -73,12 +76,13 @@ export default function Chat({ state }) {
               variable,
               newMessages.find(
                 (message) =>
-                  message.reference === referenceId && message.id === variable
+                  message.reference === referenceId &&
+                  message.chain === variable
               )
                 ? newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
-                      message.id === variable
+                      message.chain === variable
                   ).content
                 : ""
             );
@@ -87,12 +91,13 @@ export default function Chat({ state }) {
               variable,
               newMessages.find(
                 (message) =>
-                  message.reference === referenceId && message.id === variable
+                  message.reference === referenceId &&
+                  message.chain === variable
               )
                 ? newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
-                      message.id === variable
+                      message.chain === variable
                   ).content
                 : ""
             );
@@ -129,32 +134,27 @@ export default function Chat({ state }) {
                   content: userMessage,
                 },
               ],
-              max_tokens: 150,
             }),
           }).then((res) => res.json());
         })
-      ).then((res) => {
-        // res is an array of completions
-        // push these to newMessages
-        row.forEach((column, index) => {
-          newMessages = [
-            ...newMessages,
-            {
-              role: "assistant",
-              content: res[index].choices[0].message.content,
-              reference: referenceId,
-              chain: column.chain,
-            },
-          ];
-        });
-        console.log("new messages from inside: ", newMessages);
-        flushSync(() => setMessages(newMessages));
-      })
-    );
+      );
 
-    console.log("new messages: ", newMessages);
+      state[i].forEach((column, index) => {
+        newMessages = [
+          ...newMessages,
+          {
+            role: "assistant",
+            content: res[index].choices[0].message.content,
+            reference: referenceId,
+            chain: column.chain,
+          },
+        ];
+      });
+      flushSync(() => setMessages(newMessages));
 
-    // setMessages(newMessages);
+      console.log({ res });
+    }
+
     setQuery("");
   }
   return (
@@ -206,7 +206,7 @@ function ChatInput({ query, setQuery, sendQuery }) {
         />
       </Grid.Col>
       <Grid.Col span="content">
-        <Button onClick={sendQuery}>Send</Button>
+        <Button onClick={async () => await sendQuery()}>Send</Button>
       </Grid.Col>
     </Grid>
   );
