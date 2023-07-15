@@ -22,20 +22,39 @@ export default function List({ state, dispatch }) {
       {state.map((row, i) => (
         <Group key={i} noWrap>
           {row.map((item) => (
-            <ListItem
-              key={item.id}
-              item={item}
-              dispatch={dispatch}
-              allItems={state}
-            />
+            <>
+              {item.type === "chat" ? (
+                <ListItem
+                  key={item.id}
+                  item={item}
+                  dispatch={dispatch}
+                  allItems={state}
+                />
+              ) : (
+                <DocumentItem key={item.id} item={item} dispatch={dispatch} />
+              )}
+            </>
           ))}
           <Button onClick={() => dispatch({ type: "addItem", payload: i })}>
-            + Add
+            + Add chat chain
+          </Button>
+          <Button
+            onClick={() =>
+              dispatch({
+                type: "addDocument",
+                payload: i,
+              })
+            }
+          >
+            + Add document retrieval
           </Button>
         </Group>
       ))}
       <Button onClick={() => dispatch({ type: "addRow" })} w={400}>
-        + Add
+        + Add chat chain
+      </Button>
+      <Button onClick={() => dispatch({ type: "addDocumentRow" })} w={400}>
+        + Add document retrieval
       </Button>
     </Stack>
   );
@@ -125,6 +144,61 @@ function ListItem({ item, dispatch, allItems }) {
         <Button onClick={handleSave}>Save</Button>
         <Button onClick={handleDelete}>Delete</Button>
       </Flex>
+    </Card>
+  );
+}
+
+function DocumentItem({ item, dispatch }) {
+  const [query, setQuery] = useState(item.query);
+  const [name, setName] = useState(item.name);
+  // chain id refers to that output
+
+  const handleSave = () => {
+    dispatch({
+      type: "updateDocument",
+      payload: {
+        id: item.id,
+        name,
+        query,
+      },
+    });
+  };
+  const handleDelete = () => {
+    dispatch({ type: "deleteItem", payload: item.id });
+  };
+
+  return (
+    <Card withBorder padding="lg" radius="lg" w={600}>
+      <pre
+        style={{
+          overflowX: "auto",
+        }}
+      >
+        <code>
+          {JSON.stringify(
+            {
+              ...item,
+            },
+            null,
+            2
+          )}
+        </code>
+      </pre>
+      <TextInput
+        label="name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <Textarea
+        label="search query"
+        autosize
+        minRows={2}
+        maxRows={4}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      <Button onClick={handleSave}>Save</Button>
+      <Button onClick={handleDelete}>Delete</Button>
     </Card>
   );
 }

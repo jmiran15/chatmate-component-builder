@@ -14,10 +14,24 @@ function listReducer(state, action) {
         [
           {
             id,
+            type: "chat",
             name: "New chain",
             system: "You are a helpful assistant.",
             user: "{query}",
             chain: id,
+          },
+        ],
+      ];
+    case "addDocumentRow":
+      let id0 = uuidv4();
+      return [
+        ...state,
+        [
+          {
+            id: id0,
+            type: "document",
+            name: "New document retrieval",
+            query: "{query}",
           },
         ],
       ];
@@ -29,10 +43,26 @@ function listReducer(state, action) {
               ...row,
               {
                 id: id2,
+                type: "chat",
                 name: "New chain",
                 system: "You are a helpful assistant.",
                 user: "{user}",
                 chain: id2,
+              },
+            ]
+          : row
+      );
+    case "addDocument":
+      let id3 = uuidv4();
+      return state.map((row, i) =>
+        i === action.payload
+          ? [
+              ...row,
+              {
+                id: id3,
+                type: "document",
+                name: "New chain",
+                query: "{query}",
               },
             ]
           : row
@@ -52,6 +82,18 @@ function listReducer(state, action) {
                 system: action.payload.system,
                 user: action.payload.user,
                 chain: action.payload.chain,
+              }
+            : item
+        )
+      );
+    case "updateDocument":
+      return state.map((row) =>
+        row.map((item) =>
+          item.id === action.payload.id
+            ? {
+                ...item,
+                name: action.payload.name,
+                query: action.payload.query,
               }
             : item
         )

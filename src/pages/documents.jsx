@@ -1,5 +1,6 @@
-import { FileInput, Card, Text, Stack, Button } from "@mantine/core";
+import { FileInput, Card, Text, Stack, Button, Group } from "@mantine/core";
 import { useState } from "react";
+import { insert } from "../utils/supabase";
 
 const sendFiles = async (files, apiKey) => {
   const url =
@@ -28,21 +29,65 @@ const sendFiles = async (files, apiKey) => {
   }
 };
 
+// nested array of objects
+// returns an array of actual documents with content and metadata
+function formatPartitions(documents, length) {
+  let formattedDocuments = [];
+  console.log("length: ", length);
+  console.log("documents: ", documents);
+
+  if (length === 1) {
+    formattedDocuments.push({
+      metadata: {
+        filetype: documents[0].metadata.filetype,
+        filename: documents[0].metadata.filename,
+      },
+      content: documents.map((partition) => partition.text).join(" "),
+    });
+  } else {
+    documents.forEach((document) => {
+      formattedDocuments.push({
+        metadata: {
+          filetype: document[0].metadata.filetype,
+          filename: document[0].metadata.filename,
+        },
+        content: document.map((partition) => partition.text).join(" "),
+      });
+    });
+  }
+
+  return formattedDocuments;
+}
+
 export default function Documents() {
   const [files, setFiles] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   console.log("files: ", files);
 
   function onResetFiles() {
     setFiles([]);
+    setDocuments([]);
+  }
+
+  // push to supabase essentially clears out the entire db and then redoes it
+  function onPushToSupabase() {
+    console.log("pushing to supabase: ", documents);
+    setLoading(true);
+    insert(documents).then((data) => {
+      console.log("data: ", data);
+      setLoading(false);
+    });
   }
 
   function onUploadFiles() {
-    console.log("uploading files: ", files);
-    console.log("apiKey: ", process.env.REACT_APP_UNSTRUCTURED_API_KEY);
+    setLoading(true);
     sendFiles(files, process.env.REACT_APP_UNSTRUCTURED_API_KEY)
-      .then((data) => console.log(data))
+      .then((data) => {
+        setLoading(false);
+        setDocuments(formatPartitions(data, files.length));
+      })
       .catch((error) => console.error("An error occurred: ", error));
   }
 
@@ -55,14 +100,25 @@ export default function Documents() {
         placeholder="Upload files"
         multiple
       />
-      <Button onClick={onUploadFiles}>Upload</Button>
-      <Button onClick={onResetFiles}>Reset file input</Button>
-      <Button>Clear all files</Button>
+      <Group>
+        <Button onClick={onUploadFiles} disabled={loading}>
+          Upload
+        </Button>
+        <Button onClick={onResetFiles} disabled={loading}>
+          Clear
+        </Button>
+        <Button
+          disabled={documents.length > 0 ? false : loading ? true : false}
+          onClick={onPushToSupabase}
+        >
+          Push to supabase
+        </Button>
+      </Group>
       {documents.length > 0 && (
         <Stack direction="vertical" spacing="xs">
           <Text>Uploaded documents:</Text>
-          {documents.map((document, idx) => (
-            <DocumentCard key={idx} filename="Document 1" />
+          {documents.map((document, index) => (
+            <DocumentCard key={index} document={document} />
           ))}
         </Stack>
       )}
@@ -70,10 +126,11 @@ export default function Documents() {
   );
 }
 
-function DocumentCard({ filename }) {
+function DocumentCard({ document }) {
   return (
     <Card withBorder paddind="md" shadow="sm">
-      <Text size="xl">{filename}</Text>
+      <pre>{JSON.stringify(document.metadata, null, 2)}</pre>
+      <Text size="xl">{document.content}</Text>
     </Card>
   );
 }

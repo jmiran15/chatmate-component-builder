@@ -3,6 +3,7 @@ import { useViewportSize } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { v4 as uuidv4 } from "uuid";
+import { fetchSupabase } from "../utils/supabase";
 
 function transformData(messageArray) {
   let userMessages = messageArray.filter((message) => message.role === "user");
@@ -60,103 +61,127 @@ export default function Chat({ state }) {
     let allVariables = state.flat().map((item) => item.id);
 
     for (let i = 0; i < state.length; i++) {
-      console.log("processing: ", state[i]);
-      console.log("messages: ", { messages, newMessages });
-
       let res = await Promise.all(
         state[i].map((column) => {
-          let systemMessage = column.system;
-          let userMessage = column.user;
+          switch (column.type) {
+            case "document":
+              let q = column.query;
+              q = q.replace("{query}", query);
 
-          userMessage = userMessage.replace("{query}", query);
-
-          // loop through all variables and replace them with the actual results from messages
-          allVariables.forEach((variable) => {
-            systemMessage = systemMessage.replace(
-              variable,
-              newMessages.find(
-                (message) =>
-                  message.reference === referenceId &&
-                  message.chain === variable
-              )
-                ? newMessages.find(
+              allVariables.forEach((variable) => {
+                q = q.replace(
+                  variable,
+                  newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
                       message.chain === variable
-                  ).content
-                : ""
-            );
+                  )
+                    ? newMessages.find(
+                        (message) =>
+                          message.reference === referenceId &&
+                          message.chain === variable
+                      ).content
+                    : ""
+                );
+              });
 
-            userMessage = userMessage.replace(
-              variable,
-              newMessages.find(
-                (message) =>
-                  message.reference === referenceId &&
-                  message.chain === variable
-              )
-                ? newMessages.find(
+              return fetchSupabase(q);
+            // return await fetchSupabase(
+            case "chat":
+              let systemMessage = column.system;
+              let userMessage = column.user;
+
+              userMessage = userMessage.replace("{query}", query);
+
+              // loop through all variables and replace them with the actual results from messages
+              allVariables.forEach((variable) => {
+                systemMessage = systemMessage.replace(
+                  variable,
+                  newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
                       message.chain === variable
-                  ).content
-                : ""
-            );
-          });
+                  )
+                    ? newMessages.find(
+                        (message) =>
+                          message.reference === referenceId &&
+                          message.chain === variable
+                      ).content
+                    : ""
+                );
 
-          let history = chains[column.chain] || [];
+                userMessage = userMessage.replace(
+                  variable,
+                  newMessages.find(
+                    (message) =>
+                      message.reference === referenceId &&
+                      message.chain === variable
+                  )
+                    ? newMessages.find(
+                        (message) =>
+                          message.reference === referenceId &&
+                          message.chain === variable
+                      ).content
+                    : ""
+                );
+              });
 
-          console.log({
-            column,
-            systemMessage,
-            userMessage,
-            chain: history,
-          });
+              let history = chains[column.chain] || [];
 
-          return fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + String(process.env.REACT_APP_OPENAI),
-            },
-            body: JSON.stringify({
-              model: "gpt-4",
-              messages: [
-                {
-                  role: "system",
-                  content: systemMessage,
+              return fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization:
+                    "Bearer " + String(process.env.REACT_APP_OPENAI),
                 },
-                ...history.map((message) => ({
-                  role: message.role,
-                  content: message.content,
-                })),
-                {
-                  role: "user",
-                  content: userMessage,
-                },
-              ],
-            }),
-          }).then((res) => res.json());
+                body: JSON.stringify({
+                  model: "gpt-4",
+                  messages: [
+                    {
+                      role: "system",
+                      content: systemMessage,
+                    },
+                    ...history.map((message) => ({
+                      role: message.role,
+                      content: message.content,
+                    })),
+                    {
+                      role: "user",
+                      content: userMessage,
+                    },
+                  ],
+                }),
+              }).then((res) => res.json());
+            default:
+              break;
+          }
         })
       );
 
       state[i].forEach((column, index) => {
+        console.log("column: ", column);
+        console.log("res: ", res[index][0]);
         newMessages = [
           ...newMessages,
           {
             role: "assistant",
-            content: res[index].choices[0].message.content,
+            content:
+              column.type === "chat"
+                ? res[index].choices[0].message.content
+                : res[index][0].content,
             reference: referenceId,
-            chain: column.chain,
+            chain: column.type === "chat" ? column.chain : column.id,
           },
         ];
       });
       flushSync(() => setMessages(newMessages));
-
-      console.log({ res });
     }
 
     setQuery("");
   }
+  console.log({ messages });
+
   return (
     <Flex direction="column" align="center" justify="space-between" h={height}>
       <ChatHistory messages={messages} />
