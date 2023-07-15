@@ -8,6 +8,8 @@
     "@mantine/core": "^6.0.16",
     "@mantine/hooks": "^6.0.16",
     "@supabase/supabase-js": "^2.26.0",
+    "@syncfusion/ej2-react-dropdowns": "^22.1.38",
+    "@syncfusion/ej2-react-richtexteditor": "^22.1.38",
     "@tabler/icons-react": "^2.25.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
