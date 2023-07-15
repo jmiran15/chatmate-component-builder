@@ -1,9 +1,9 @@
 import { Tabs } from "@mantine/core";
-import { IconMessage, IconHammer } from "@tabler/icons-react";
 import { v4 as uuidv4 } from "uuid";
 import { useReducer } from "react";
 import Chat from "./pages/chat";
 import List from "./pages/components";
+import Documents from "./pages/documents";
 
 function listReducer(state, action) {
   switch (action.type) {
@@ -69,12 +69,9 @@ export default function Shell() {
   return (
     <Tabs variant="pills" orientation="vertical" defaultValue="chat">
       <Tabs.List>
-        <Tabs.Tab value="chat" icon={<IconMessage size="0.8rem" />}>
-          Chat
-        </Tabs.Tab>
-        <Tabs.Tab value="components" icon={<IconHammer size="0.8rem" />}>
-          Components
-        </Tabs.Tab>
+        <Tabs.Tab value="chat">Chat</Tabs.Tab>
+        <Tabs.Tab value="components">Components</Tabs.Tab>
+        <Tabs.Tab value="documents">Documents</Tabs.Tab>
       </Tabs.List>
 
       <Tabs.Panel value="chat" pl="xs">
@@ -83,6 +80,10 @@ export default function Shell() {
 
       <Tabs.Panel value="components" pl="xs">
         <List state={state} dispatch={dispatch} />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="documents" pl="xs">
+        <Documents />
       </Tabs.Panel>
     </Tabs>
   );
