@@ -129,6 +129,7 @@ export default function ChatChain({
         />
       </Group>
       <NativeSelect
+        disabled={true}
         label="Select the chat history chain"
         value={historyChain}
         onChange={(e) => setHistoryChain(e.target.value)}

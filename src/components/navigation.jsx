@@ -172,7 +172,7 @@ export default function Navigation({
               <span>Chat</span>
             </div>
           </UnstyledButton>
-          <UnstyledButton className={classes.mainLink}>
+          {/* <UnstyledButton className={classes.mainLink}>
             <div className={classes.mainLinkInner}>
               <IconBug
                 size={20}
@@ -181,7 +181,7 @@ export default function Navigation({
               />
               <span>Logs</span>
             </div>
-          </UnstyledButton>
+          </UnstyledButton> */}
         </div>
       </Navbar.Section>
 

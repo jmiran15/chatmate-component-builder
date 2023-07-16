@@ -35,7 +35,7 @@ export default function Chat({ state, graphState, dependencyOrder }) {
   const { height } = useViewportSize();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState([]);
-  const [openaikey, setOpenaikey] = useState("");
+  const [openaiKey, setOpenaiKey] = useState("");
 
   let chains = transformData(messages);
 
@@ -173,7 +173,7 @@ export default function Chat({ state, graphState, dependencyOrder }) {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: "Bearer " + String(openaikey),
+                  Authorization: "Bearer " + String(openaiKey),
                 },
                 body: JSON.stringify({
                   model: "gpt-4",
@@ -216,6 +216,8 @@ export default function Chat({ state, graphState, dependencyOrder }) {
       console.log({ newMessages });
       flushSync(() => setMessages(newMessages));
     }
+
+    console.log({ openaiKey });
 
     // let allVariables = state.flat().map((item) => item.id);
 
@@ -343,18 +345,20 @@ export default function Chat({ state, graphState, dependencyOrder }) {
 
   return (
     <Flex direction="column" align="center" justify="space-between" h={height}>
-      <TextInput
-        label="Enter your openai key"
-        value={openaiKey}
-        onChange={(e) => setOpenaiKey(e.target.value)}
-      />
-      <ChatHistory messages={messages} graphState={graphState} />
+      <Flex direction="column" gap="sm">
+        <TextInput
+          label="Enter your openai key"
+          value={openaiKey}
+          onChange={(e) => setOpenaiKey(e.target.value)}
+        />
+        <ChatHistory messages={messages} graphState={graphState} />
+      </Flex>
       <ChatInput query={query} setQuery={setQuery} sendQuery={sendQuery} />
     </Flex>
   );
 }
 
-function ChatHistory({ messages }) {
+function ChatHistory({ messages, graphState }) {
   return (
     <Flex
       direction="column"
@@ -364,13 +368,14 @@ function ChatHistory({ messages }) {
       }}
     >
       {messages.map((message, index) => (
-        <ChatMessage key={index} message={message.content} />
+        <ChatMessage key={index} message={message} graphState={graphState} />
       ))}
     </Flex>
   );
 }
 
 function ChatMessage({ message, graphState }) {
+  console.log({ graphState });
   return (
     <Flex
       direction="column"
@@ -386,7 +391,7 @@ function ChatMessage({ message, graphState }) {
           ? "user"
           : graphState.nodes[message.chain].name}
       </Badge>
-      <Text>{message}</Text>
+      <Text>{message.content}</Text>
     </Flex>
   );
 }
