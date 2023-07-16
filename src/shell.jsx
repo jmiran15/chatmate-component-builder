@@ -106,8 +106,6 @@ function listReducer(state, action) {
 export default function Shell() {
   const [state, dispatch] = useReducer(listReducer, []);
 
-  console.log(state);
-
   return (
     <Tabs variant="pills" orientation="vertical" defaultValue="chat">
       <Tabs.List>

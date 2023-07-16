@@ -44,8 +44,6 @@ export default function ChatChain({
   ];
   let availableChains = chatChainIds;
 
-  console.log({ availableVariables, availableChains });
-
   function getInnerStrings(str) {
     const regex =
       /<span contenteditable="false" class="e-mention-chip">([\s\S]*?)<\/span>/g;
@@ -76,19 +74,22 @@ export default function ChatChain({
 
     let systemDependenciesNames = getInnerStrings(systemMessage);
     let userDependenciesNames = getInnerStrings(userMessage);
-    console.log({ systemDependenciesNames, userDependenciesNames });
 
     systemDependenciesNames.forEach((name) => {
       let id = availableVariables.find((variable) => variable.name === name).id;
-      console.log("id found: ", { name, id });
+      if (!id) return;
+      addDependency(node.id, id);
+    });
+
+    userDependenciesNames.forEach((name) => {
+      let id = availableVariables.find((variable) => variable.name === name).id;
+      if (!id) return;
       addDependency(node.id, id);
     });
   }
   function onDelete() {
     deleteNode(node.id);
   }
-
-  console.log("STATE: ", state);
 
   return (
     <Stack align="flex-start">

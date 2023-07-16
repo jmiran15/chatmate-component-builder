@@ -153,15 +153,6 @@ export default function Navigation({
 
   return (
     <Navbar width={{ sm: 300 }} p="md" className={classes.navbar}>
-      <Navbar.Section className={classes.header}>
-        <Group sx={{ fontWeight: 700 }} position="apart">
-          <Text size="xl" w={rem(120)}>
-            Chatmate
-          </Text>
-          <Code sx={{ fontWeight: 700 }}>v1.0.0</Code>
-        </Group>
-      </Navbar.Section>
-
       <Navbar.Section className={classes.section}>
         <div className={classes.mainLinks}>
           <UnstyledButton

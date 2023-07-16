@@ -31,12 +31,7 @@ function transformData(messageArray) {
   return chains;
 }
 
-export default function Chat({
-  state,
-  graphState,
-  dependencyOrder,
-  chatChains,
-}) {
+export default function Chat({ state, graphState, dependencyOrder }) {
   const { height } = useViewportSize();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState([]);
@@ -63,7 +58,10 @@ export default function Chat({
 
     setMessages(newMessages);
 
+    console.log("DEPENDENCY ORDER", { dependencyOrder, graphState });
     for (let i = 0; i < dependencyOrder.length; i++) {
+      console.log("RUNNING ROW", i);
+
       // first lets convert this row to an array of "nodes"
       let row = dependencyOrder[i].map((id) => graphState.nodes[id]); // array of nodes that should be run in parallel
       let res = await Promise.all(
@@ -75,18 +73,18 @@ export default function Chat({
                 query
               );
 
-              chatChains.forEach((node) => {
+              Object.keys(graphState.nodes).forEach((id) => {
                 q = q.replace(
-                  `<span contenteditable="false" class="e-mention-chip">${node.name}</span>`,
+                  `<span contenteditable="false" class="e-mention-chip">${graphState.nodes[id].name}</span>`,
                   newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
-                      message.chain === node.id
+                      message.chain === graphState.nodes[id].id
                   )
                     ? newMessages.find(
                         (message) =>
                           message.reference === referenceId &&
-                          message.chain === node.id
+                          message.chain === graphState.nodes[id].id
                       ).content
                     : ""
                 );
@@ -108,40 +106,67 @@ export default function Chat({
                 query
               );
 
+              console.log({
+                CHATCHAINS: Object.keys(graphState.nodes).map(
+                  (id) => graphState.nodes[id]
+                ),
+                NODE: node,
+                SYSTEM: systemMessage,
+                USER: userMessage,
+                NEWMESSAGES: newMessages,
+              });
+
               // loop through all variables and replace them with the actual results from messages
-              chatChains.forEach((node) => {
+              Object.keys(graphState.nodes).forEach((id) => {
                 systemMessage = systemMessage.replace(
-                  `<span contenteditable="false" class="e-mention-chip">${node.name}</span>`,
+                  `<span contenteditable="false" class="e-mention-chip">${graphState.nodes[id].name}</span>`,
                   newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
-                      message.chain === node.id
+                      message.chain === graphState.nodes[id].id
                   )
                     ? newMessages.find(
                         (message) =>
                           message.reference === referenceId &&
-                          message.chain === node.id
+                          message.chain === graphState.nodes[id].id
                       ).content
                     : ""
                 );
 
                 userMessage = userMessage.replace(
-                  `<span contenteditable="false" class="e-mention-chip">${node.name}</span>`,
+                  `<span contenteditable="false" class="e-mention-chip">${graphState.nodes[id].name}</span>`,
                   newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
-                      message.chain === node.id
+                      message.chain === graphState.nodes[id].id
                   )
                     ? newMessages.find(
                         (message) =>
                           message.reference === referenceId &&
-                          message.chain === node.id
+                          message.chain === graphState.nodes[id].id
                       ).content
                     : ""
                 );
               });
 
               let history = chains[node.history] || [];
+
+              console.log({
+                MESSAGES: [
+                  {
+                    role: "system",
+                    content: systemMessage,
+                  },
+                  ...history.map((message) => ({
+                    role: message.role,
+                    content: message.content,
+                  })),
+                  {
+                    role: "user",
+                    content: userMessage,
+                  },
+                ],
+              });
 
               return fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
@@ -175,7 +200,6 @@ export default function Chat({
       );
 
       dependencyOrder[i].forEach((nodeId, index) => {
-        console.log("column: ", graphState.nodes[nodeId]);
         newMessages = [
           ...newMessages,
           {
@@ -189,6 +213,7 @@ export default function Chat({
           },
         ];
       });
+      console.log({ newMessages });
       flushSync(() => setMessages(newMessages));
     }
 

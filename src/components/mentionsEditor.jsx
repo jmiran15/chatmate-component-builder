@@ -18,8 +18,6 @@ export default function MentionsEditor({
   id,
   nodeId,
 }) {
-  console.log({ variables, label });
-
   var fieldsData = { text: "name" };
 
   var itemTemplate = function (data) {
@@ -32,7 +30,6 @@ export default function MentionsEditor({
 
   var actionBegineHandler = function (args) {
     if (args.requestType === "EnterAction") {
-      console.log("enter action");
       args.cancel = true;
     }
   };

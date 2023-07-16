@@ -33,8 +33,6 @@ const sendFiles = async (files, apiKey) => {
 // returns an array of actual documents with content and metadata
 function formatPartitions(documents, length) {
   let formattedDocuments = [];
-  console.log("length: ", length);
-  console.log("documents: ", documents);
 
   if (length === 1) {
     formattedDocuments.push({
@@ -64,8 +62,6 @@ export default function Documents() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  console.log("files: ", files);
-
   function onResetFiles() {
     setFiles([]);
     setDocuments([]);
@@ -73,10 +69,8 @@ export default function Documents() {
 
   // push to supabase essentially clears out the entire db and then redoes it
   function onPushToSupabase() {
-    console.log("pushing to supabase: ", documents);
     setLoading(true);
     insert(documents).then((data) => {
-      console.log("data: ", data);
       setLoading(false);
     });
   }

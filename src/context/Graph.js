@@ -62,7 +62,6 @@ const graphReducer = (state, action) => {
       }
 
     case EDIT_NODE:
-      console.log(action.payload);
       return {
         ...state,
         nodes: {

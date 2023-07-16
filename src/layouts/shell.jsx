@@ -21,8 +21,6 @@ export default function Shell() {
   const [onChatPage, setOnChatPage] = useState(false);
 
   useEffect(() => {
-    console.log("shell mounted");
-
     return () => {
       // delete all the users data tables
       console.log("shell unmounted");
@@ -43,8 +41,6 @@ export default function Shell() {
     .filter((node) => node.type === "document")
     .map((node) => node.tableId);
 
-  console.log("chat chain ids", chatChainIds);
-
   const createNode = (payload) => {
     dispatch({ type: CREATE_NODE, payload });
   };
@@ -62,8 +58,6 @@ export default function Shell() {
     setOnChatPage(false);
     setSelectedPage(id);
   }
-  console.log("on chat page", onChatPage);
-  console.log("dependency order", dependencyOrder);
 
   return (
     <AppShell

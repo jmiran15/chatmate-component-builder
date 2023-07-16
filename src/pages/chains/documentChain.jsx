@@ -33,10 +33,6 @@ export default function DocumentChain({
 
   let rteQuery = useRef(null);
 
-  console.log("node: ", {
-    node,
-  });
-
   let availableVariables = [
     {
       name: "user_input",
@@ -54,9 +50,7 @@ export default function DocumentChain({
   let tableId = node.tableId;
 
   useEffect(() => {
-    console.log("document chain mounted");
     fetchTable(tableId).then((res) => {
-      console.log("fetched documents: ", res);
       setFetchedDocuments(res);
     });
     return () => {
@@ -90,12 +84,10 @@ export default function DocumentChain({
     });
 
     let searchQueryDependenciesNames = getInnerStrings(searchQuery);
-    console.log({ searchQueryDependenciesNames });
 
     searchQueryDependenciesNames.forEach((name) => {
       let id = availableVariables.find((variable) => variable.name === name).id;
       if (!id) return;
-      console.log("id found: ", { name, id });
       addDependency(node.id, id);
     });
   }
@@ -122,9 +114,7 @@ export default function DocumentChain({
 
         insert(documents, tableId)
           .then((data) => {
-            console.log("data: ", data);
             fetchTable(tableId).then((res) => {
-              console.log("fetched documents: ", res);
               setFetchedDocuments(res);
             });
           })
@@ -229,8 +219,6 @@ const sendFiles = async (files, apiKey) => {
 // returns an array of actual documents with content and metadata
 function formatPartitions(documents, length) {
   let formattedDocuments = [];
-  console.log("length: ", length);
-  console.log("documents: ", documents);
 
   if (length === 1) {
     formattedDocuments.push({
