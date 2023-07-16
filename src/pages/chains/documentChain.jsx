@@ -29,6 +29,7 @@ export default function DocumentChain({
   const [similarityThreshold, setSimilarityThreshold] = useState(
     node.similarityThreshold
   );
+  const [splitThreshold, setSplitThreshold] = useState();
   let searchQuery = node.searchQuery;
 
   let rteQuery = useRef(null);
@@ -111,6 +112,26 @@ export default function DocumentChain({
     sendFiles(files, process.env.REACT_APP_UNSTRUCTURED_API_KEY).then(
       (data) => {
         let documents = formatPartitions(data, files.length);
+        let splitDocs = [];
+
+        // split documents if they are too long
+        for (let i = 0; i < documents.length; i++) {
+          let splitDocuments = stringSplitter(
+            documents[i].content,
+            splitThreshold
+          ); // returns an array of contents
+          splitDocuments.forEach((content, idx) => {
+            splitDocs.push({
+              content,
+              metadata: {
+                ...documents[i].metadata,
+                filename: documents[i].metadata.filename + "-" + idx,
+              },
+            });
+          });
+        }
+
+        console.log({ splitDocs });
 
         insert(documents, tableId)
           .then((data) => {
@@ -141,6 +162,7 @@ export default function DocumentChain({
         step={1}
         value={numDocs}
         onChange={setNumDocs}
+        disabled={true}
       />
       <NumberInput
         label="Similarity threshold"
@@ -150,6 +172,7 @@ export default function DocumentChain({
         step={1.0}
         value={similarityThreshold}
         onChange={setSimilarityThreshold}
+        disabled={true}
       />
       <MentionsEditor
         id={"document"}
@@ -160,6 +183,16 @@ export default function DocumentChain({
         variables={availableVariables}
         state={state}
       />
+      <NumberInput
+        label="Split documents once they reach this character limit"
+        defaultValue={1000}
+        precision={0}
+        min={0}
+        step={1}
+        value={splitThreshold}
+        onChange={setSplitThreshold}
+      />
+
       <Group>
         <FileInput
           value={files}
@@ -241,4 +274,16 @@ function formatPartitions(documents, length) {
   }
 
   return formattedDocuments;
+}
+
+function stringSplitter(str, threshold) {
+  const resultArr = [];
+  if (str.length > threshold) {
+    for (let i = 0; i < str.length; i += threshold) {
+      resultArr.push(str.slice(i, i + threshold));
+    }
+  } else {
+    resultArr.push(str);
+  }
+  return resultArr;
 }

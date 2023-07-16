@@ -1,4 +1,4 @@
-import { Flex, Grid, TextInput, Text, Button } from "@mantine/core";
+import { Flex, Grid, TextInput, Text, Button, Badge } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
@@ -35,6 +35,7 @@ export default function Chat({ state, graphState, dependencyOrder }) {
   const { height } = useViewportSize();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState([]);
+  const [openaikey, setOpenaikey] = useState("");
 
   let chains = transformData(messages);
 
@@ -172,8 +173,7 @@ export default function Chat({ state, graphState, dependencyOrder }) {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization:
-                    "Bearer " + String(process.env.REACT_APP_OPENAI),
+                  Authorization: "Bearer " + String(openaikey),
                 },
                 body: JSON.stringify({
                   model: "gpt-4",
@@ -343,7 +343,12 @@ export default function Chat({ state, graphState, dependencyOrder }) {
 
   return (
     <Flex direction="column" align="center" justify="space-between" h={height}>
-      <ChatHistory messages={messages} />
+      <TextInput
+        label="Enter your openai key"
+        value={openaiKey}
+        onChange={(e) => setOpenaiKey(e.target.value)}
+      />
+      <ChatHistory messages={messages} graphState={graphState} />
       <ChatInput query={query} setQuery={setQuery} sendQuery={sendQuery} />
     </Flex>
   );
@@ -365,15 +370,22 @@ function ChatHistory({ messages }) {
   );
 }
 
-function ChatMessage({ message }) {
+function ChatMessage({ message, graphState }) {
   return (
     <Flex
+      direction="column"
+      align="flex-start"
       style={{
         border: "1px solid #ccc",
         borderRadius: "5px",
         padding: "10px",
       }}
     >
+      <Badge>
+        {message.role === "user"
+          ? "user"
+          : graphState.nodes[message.chain].name}
+      </Badge>
       <Text>{message}</Text>
     </Flex>
   );
