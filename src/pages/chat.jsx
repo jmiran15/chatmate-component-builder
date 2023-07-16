@@ -31,7 +31,12 @@ function transformData(messageArray) {
   return chains;
 }
 
-export default function Chat({ state }) {
+export default function Chat({
+  state,
+  graphState,
+  dependencyOrder,
+  chatChains,
+}) {
   const { height } = useViewportSize();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState([]);
@@ -58,75 +63,85 @@ export default function Chat({ state }) {
 
     setMessages(newMessages);
 
-    let allVariables = state.flat().map((item) => item.id);
-
-    for (let i = 0; i < state.length; i++) {
+    for (let i = 0; i < dependencyOrder.length; i++) {
+      // first lets convert this row to an array of "nodes"
+      let row = dependencyOrder[i].map((id) => graphState.nodes[id]); // array of nodes that should be run in parallel
       let res = await Promise.all(
-        state[i].map((column) => {
-          switch (column.type) {
+        row.map((node) => {
+          switch (node.type) {
             case "document":
-              let q = column.query;
-              q = q.replace("{query}", query);
+              let q = node.searchQuery.replace(
+                `<span contenteditable="false" class="e-mention-chip">user_input</span>`,
+                query
+              );
 
-              allVariables.forEach((variable) => {
+              chatChains.forEach((node) => {
                 q = q.replace(
-                  variable,
+                  `<span contenteditable="false" class="e-mention-chip">${node.name}</span>`,
                   newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
-                      message.chain === variable
+                      message.chain === node.id
                   )
                     ? newMessages.find(
                         (message) =>
                           message.reference === referenceId &&
-                          message.chain === variable
+                          message.chain === node.id
                       ).content
                     : ""
                 );
               });
 
-              return fetchSupabase(q);
-            // return await fetchSupabase(
-            case "chat":
-              let systemMessage = column.system;
-              let userMessage = column.user;
+              return fetchSupabase(q, node.tableId);
 
-              userMessage = userMessage.replace("{query}", query);
+            case "chat":
+              let systemMessage = node.systemMessage;
+              let userMessage = node.userMessage;
+
+              // replace the user input with the actual query
+              systemMessage = systemMessage.replace(
+                `<span contenteditable="false" class="e-mention-chip">user_input</span>`,
+                query
+              );
+              userMessage = userMessage.replace(
+                `<span contenteditable="false" class="e-mention-chip">user_input</span>`,
+                query
+              );
 
               // loop through all variables and replace them with the actual results from messages
-              allVariables.forEach((variable) => {
+              chatChains.forEach((node) => {
                 systemMessage = systemMessage.replace(
-                  variable,
+                  `<span contenteditable="false" class="e-mention-chip">${node.name}</span>`,
                   newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
-                      message.chain === variable
+                      message.chain === node.id
                   )
                     ? newMessages.find(
                         (message) =>
                           message.reference === referenceId &&
-                          message.chain === variable
+                          message.chain === node.id
                       ).content
                     : ""
                 );
 
                 userMessage = userMessage.replace(
-                  variable,
+                  `<span contenteditable="false" class="e-mention-chip">${node.name}</span>`,
                   newMessages.find(
                     (message) =>
                       message.reference === referenceId &&
-                      message.chain === variable
+                      message.chain === node.id
                   )
                     ? newMessages.find(
                         (message) =>
                           message.reference === referenceId &&
-                          message.chain === variable
+                          message.chain === node.id
                       ).content
                     : ""
                 );
               });
 
-              let history = chains[column.chain] || [];
+              let history = chains[node.history] || [];
 
               return fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
@@ -159,24 +174,143 @@ export default function Chat({ state }) {
         })
       );
 
-      state[i].forEach((column, index) => {
-        console.log("column: ", column);
-        console.log("res: ", res[index][0]);
+      dependencyOrder[i].forEach((nodeId, index) => {
+        console.log("column: ", graphState.nodes[nodeId]);
         newMessages = [
           ...newMessages,
           {
             role: "assistant",
             content:
-              column.type === "chat"
+              graphState.nodes[nodeId].type === "chat"
                 ? res[index].choices[0].message.content
                 : res[index][0].content,
             reference: referenceId,
-            chain: column.type === "chat" ? column.chain : column.id,
+            chain: graphState.nodes[nodeId].id,
           },
         ];
       });
       flushSync(() => setMessages(newMessages));
     }
+
+    // let allVariables = state.flat().map((item) => item.id);
+
+    // for (let i = 0; i < state.length; i++) {
+    //   let res = await Promise.all(
+    //     state[i].map((column) => {
+    //       switch (column.type) {
+    //         case "document":
+    //           let q = column.query;
+    //           q = q.replace("{query}", query);
+
+    //           allVariables.forEach((variable) => {
+    //             q = q.replace(
+    //               variable,
+    //               newMessages.find(
+    //                 (message) =>
+    //                   message.reference === referenceId &&
+    //                   message.chain === variable
+    //               )
+    //                 ? newMessages.find(
+    //                     (message) =>
+    //                       message.reference === referenceId &&
+    //                       message.chain === variable
+    //                   ).content
+    //                 : ""
+    //             );
+    //           });
+
+    //           return fetchSupabase(q);
+    //         // return await fetchSupabase(
+    //         case "chat":
+    //           let systemMessage = column.system;
+    //           let userMessage = column.user;
+
+    //           userMessage = userMessage.replace("{query}", query);
+
+    //           // loop through all variables and replace them with the actual results from messages
+    //           allVariables.forEach((variable) => {
+    //             systemMessage = systemMessage.replace(
+    //               variable,
+    //               newMessages.find(
+    //                 (message) =>
+    //                   message.reference === referenceId &&
+    //                   message.chain === variable
+    //               )
+    //                 ? newMessages.find(
+    //                     (message) =>
+    //                       message.reference === referenceId &&
+    //                       message.chain === variable
+    //                   ).content
+    //                 : ""
+    //             );
+
+    //             userMessage = userMessage.replace(
+    //               variable,
+    //               newMessages.find(
+    //                 (message) =>
+    //                   message.reference === referenceId &&
+    //                   message.chain === variable
+    //               )
+    //                 ? newMessages.find(
+    //                     (message) =>
+    //                       message.reference === referenceId &&
+    //                       message.chain === variable
+    //                   ).content
+    //                 : ""
+    //             );
+    //           });
+
+    //           let history = chains[column.chain] || [];
+
+    //           return fetch("https://api.openai.com/v1/chat/completions", {
+    //             method: "POST",
+    //             headers: {
+    //               "Content-Type": "application/json",
+    //               Authorization:
+    //                 "Bearer " + String(process.env.REACT_APP_OPENAI),
+    //             },
+    //             body: JSON.stringify({
+    //               model: "gpt-4",
+    //               messages: [
+    //                 {
+    //                   role: "system",
+    //                   content: systemMessage,
+    //                 },
+    //                 ...history.map((message) => ({
+    //                   role: message.role,
+    //                   content: message.content,
+    //                 })),
+    //                 {
+    //                   role: "user",
+    //                   content: userMessage,
+    //                 },
+    //               ],
+    //             }),
+    //           }).then((res) => res.json());
+    //         default:
+    //           break;
+    //       }
+    //     })
+    //   );
+
+    //   state[i].forEach((column, index) => {
+    //     console.log("column: ", column);
+    //     console.log("res: ", res[index][0]);
+    //     newMessages = [
+    //       ...newMessages,
+    //       {
+    //         role: "assistant",
+    //         content:
+    //           column.type === "chat"
+    //             ? res[index].choices[0].message.content
+    //             : res[index][0].content,
+    //         reference: referenceId,
+    //         chain: column.type === "chat" ? column.chain : column.id,
+    //       },
+    //     ];
+    //   });
+    //   flushSync(() => setMessages(newMessages));
+    // }
 
     setQuery("");
   }

@@ -1,17 +1,18 @@
 import {
   createStyles,
   Navbar,
-  TextInput,
   Code,
   UnstyledButton,
-  Badge,
   Text,
   Group,
+  Menu,
   ActionIcon,
   Tooltip,
   rem,
 } from "@mantine/core";
 import { IconMessageChatbot, IconBug, IconPlus } from "@tabler/icons-react";
+import { v4 as uuidv4 } from "uuid";
+import Chat from "../pages/chat";
 
 const useStyles = createStyles((theme) => ({
   navbar: {
@@ -126,47 +127,29 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-const links = [
-  { icon: IconMessageChatbot, label: "Chat" },
-  { icon: IconBug, label: "Logs" },
-];
-
-const collections = [
-  { label: "Standalone question" },
-  { label: "Thought" },
-  { label: "Lecture notes" },
-  { label: "Main" },
-];
-
-export default function Navigation() {
+export default function Navigation({
+  onClickComponent,
+  state,
+  createNode,
+  setSelectedPage,
+  setOnChatPage,
+}) {
   const { classes } = useStyles();
 
-  const mainLinks = links.map((link) => (
-    <UnstyledButton key={link.label} className={classes.mainLink}>
-      <div className={classes.mainLinkInner}>
-        <link.icon size={20} className={classes.mainLinkIcon} stroke={1.5} />
-        <span>{link.label}</span>
-      </div>
-      {/* {link.notifications && (
-        <Badge size="sm" variant="filled" className={classes.mainLinkBadge}>
-          {link.notifications}
-        </Badge>
-      )} */}
-    </UnstyledButton>
-  ));
-
-  const collectionLinks = collections.map((collection) => (
-    <a
-      onClick={(event) => {
-        event.preventDefault();
-        console.log("clicked ", collection.label);
-      }}
-      key={collection.label}
-      className={classes.collectionLink}
-    >
-      {collection.label}
-    </a>
-  ));
+  const componentLinks = Object.keys(state.nodes).map((key) => {
+    return (
+      <a
+        onClick={(event) => {
+          event.preventDefault();
+          onClickComponent(state.nodes[key].id);
+        }}
+        key={key}
+        className={classes.collectionLink}
+      >
+        {state.nodes[key].name}
+      </a>
+    );
+  });
 
   return (
     <Navbar width={{ sm: 300 }} p="md" className={classes.navbar}>
@@ -180,7 +163,35 @@ export default function Navigation() {
       </Navbar.Section>
 
       <Navbar.Section className={classes.section}>
-        <div className={classes.mainLinks}>{mainLinks}</div>
+        <div className={classes.mainLinks}>
+          <UnstyledButton
+            className={classes.mainLink}
+            onClick={() => {
+              console.log("clicked");
+              setSelectedPage(undefined);
+              setOnChatPage(true);
+            }}
+          >
+            <div className={classes.mainLinkInner}>
+              <IconMessageChatbot
+                size={20}
+                className={classes.mainLinkIcon}
+                stroke={1.5}
+              />
+              <span>Chat</span>
+            </div>
+          </UnstyledButton>
+          <UnstyledButton className={classes.mainLink}>
+            <div className={classes.mainLinkInner}>
+              <IconBug
+                size={20}
+                className={classes.mainLinkIcon}
+                stroke={1.5}
+              />
+              <span>Logs</span>
+            </div>
+          </UnstyledButton>
+        </div>
       </Navbar.Section>
 
       <Navbar.Section className={classes.section}>
@@ -188,13 +199,51 @@ export default function Navigation() {
           <Text size="xs" weight={500} color="dimmed">
             Collections
           </Text>
-          <Tooltip label="Create collection" withArrow position="right">
-            <ActionIcon variant="default" size={18}>
-              <IconPlus size="0.8rem" stroke={1.5} />
-            </ActionIcon>
-          </Tooltip>
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Tooltip label="Create collection" withArrow position="right">
+                <ActionIcon variant="default" size={18}>
+                  <IconPlus size="0.8rem" stroke={1.5} />
+                </ActionIcon>
+              </Tooltip>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>Chain components</Menu.Label>
+              <Menu.Item
+                onClick={() => {
+                  createNode({
+                    type: "chat",
+                    name: "New chat component",
+                    chatModel: "gpt-4",
+                    temperature: 0.7,
+                    maxTokens: 256,
+                    systemMessage: "You are a helpful assistant.",
+                    userMessage: `<span contenteditable="false" class="e-mention-chip">user_input</span>`,
+                  });
+                }}
+              >
+                Chat
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  const tableId = uuidv4();
+                  createNode({
+                    type: "document",
+                    name: "New document retrieval component",
+                    numberOfDocuments: 1,
+                    similarityThreshold: 0.7,
+                    searchQuery: `<span contenteditable="false" class="e-mention-chip">user_input</span>`,
+                    tableId,
+                  });
+                }}
+              >
+                Document retrieval
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
-        <div className={classes.collections}>{collectionLinks}</div>
+        <div className={classes.collections}>{componentLinks}</div>
       </Navbar.Section>
     </Navbar>
   );

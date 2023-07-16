@@ -17,10 +17,18 @@ export const EDIT_NODE = "EDIT_NODE";
 const graphReducer = (state, action) => {
   switch (action.type) {
     case CREATE_NODE:
-      const id = uuidv4(); // Generating unique id
+      const id = uuidv4();
       return {
         ...state,
-        nodes: { ...state.nodes, [id]: { id, dependencies: [] } },
+        nodes: {
+          ...state.nodes,
+          [id]: {
+            id,
+            history: id,
+            dependencies: [],
+            ...action.payload,
+          },
+        },
       };
 
     case DELETE_NODE:
@@ -54,13 +62,14 @@ const graphReducer = (state, action) => {
       }
 
     case EDIT_NODE:
+      console.log(action.payload);
       return {
         ...state,
         nodes: {
           ...state.nodes,
           [action.payload.nodeId]: {
             ...state.nodes[action.payload.nodeId],
-            dependencies: action.payload.dependencies,
+            ...action.payload,
           },
         },
       };

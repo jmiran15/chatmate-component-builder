@@ -23,49 +23,74 @@ export async function fetchSupabase(query) {
   return data;
 }
 
-// {
-//   metadata: {
+export async function insert(documents, tableId) {
+  // embed all documents
+  let embeddingResponses = await Promise.all(
+    documents.map((document) => embed(document.content))
+  );
+  console.log("embeddingResponses", embeddingResponses);
 
-//   },
-//   content: "This is a test",
-// }
-export async function insert(documents) {
-  let num = 0;
-
-  // delete everything before pushing
-  const { error } = await supabaseClient
+  // insert all documents
+  const { data, error } = await supabaseClient
     .from("documents")
-    .delete()
-    .neq("id", 0);
+    .insert(
+      documents.map((document, index) => ({
+        content: document.content,
+        metadata: document.metadata,
+        embedding: embeddingResponses[index].data[0].embedding,
+        table: tableId,
+      }))
+    )
+    .select();
 
-  if (error) {
-    console.log("error", error);
-  }
+  // for (const document of documents) {
+  //   let embedding = await embed(document.content);
+  //   console.log("embedding", embedding);
 
-  for (const document of documents) {
-    let embedding = await embed(document.content);
-    console.log("embedding", embedding);
+  //   try {
+  //     const { error, data } = await supabaseClient
+  //       .from("documents")
+  //       .insert({
+  //         content: document.content,
+  //         metadata: document.metadata,
+  //         embedding: embedding.data[0].embedding,
+  //       })
+  //       .select()
+  //       .limit(1)
+  //       .single();
 
-    try {
-      const { error, data } = await supabaseClient
-        .from("documents")
-        .insert({
-          content: document.content,
-          metadata: document.metadata,
-          embedding: embedding.data[0].embedding,
-        })
-        .select()
-        .limit(1)
-        .single();
+  //     console.log("data", data);
+  //     console.log("error", error);
+  //   } catch (error) {
+  //     console.log("error", error);
+  //   }
 
-      console.log("data", data);
-      console.log("error", error);
-    } catch (error) {
-      console.log("error", error);
-    }
-
-    console.log("iteration: ", num++);
-  }
+  //   console.log("iteration: ", num++);
+  // }
 
   console.log("Done");
+}
+
+export async function fetchTable(tableId) {
+  try {
+    let { data: documents, error } = await supabaseClient
+      .from("documents")
+      .select("id, metadata, content")
+      .eq("table", tableId);
+    return documents;
+  } catch (error) {
+    console.log("error", error);
+  }
+}
+
+export async function deleteTable(tableId) {
+  try {
+    const { error } = await supabaseClient
+      .from("documents")
+      .delete()
+      .eq("table", tableId);
+    console.log("deleted table: ", tableId);
+  } catch (error) {
+    console.log("error", error);
+  }
 }
