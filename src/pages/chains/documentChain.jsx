@@ -222,7 +222,8 @@ export default function DocumentChain({
 }
 
 const sendFiles = async (files, apiKey) => {
-  const url = "https://api.unstructured.io/general/v0/general";
+  const url =
+    "https://cors-anywhere.herokuapp.com/https://api.unstructured.io/general/v0/general";
   const formData = new FormData();
 
   files.forEach((file, index) => {
