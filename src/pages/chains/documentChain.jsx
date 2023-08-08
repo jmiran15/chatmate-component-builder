@@ -9,7 +9,6 @@ import {
 } from "@mantine/core";
 import { useState, useRef, useEffect } from "react";
 import FilesTable from "../../components/filesTable";
-
 import MentionsEditor from "../../components/mentionsEditor";
 import { insert, fetchTable, deleteTable } from "../../utils/supabase";
 
@@ -49,6 +48,8 @@ export default function DocumentChain({
   let availableChains = chatChainIds;
 
   let tableId = node.tableId;
+
+  console.log("files: ", files);
 
   useEffect(() => {
     fetchTable(tableId).then((res) => {
@@ -113,7 +114,6 @@ export default function DocumentChain({
       (data) => {
         let documents = formatPartitions(data, files.length);
         let splitDocs = [];
-
         // split documents if they are too long
         for (let i = 0; i < documents.length; i++) {
           let splitDocuments = stringSplitter(
@@ -130,9 +130,7 @@ export default function DocumentChain({
             });
           });
         }
-
         console.log({ splitDocs });
-
         insert(documents, tableId)
           .then((data) => {
             fetchTable(tableId).then((res) => {
@@ -223,7 +221,7 @@ export default function DocumentChain({
 
 const sendFiles = async (files, apiKey) => {
   const url =
-    "https://cors-anywhere.herokuapp.com/https://api.unstructured.io/general/v0/general";
+    "http://localhost:8080/https://api.unstructured.io/general/v0/general";
   const formData = new FormData();
 
   files.forEach((file, index) => {

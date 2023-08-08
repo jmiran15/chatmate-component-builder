@@ -94,3 +94,61 @@ export async function deleteTable(tableId) {
     console.log("error", error);
   }
 }
+
+export async function createProject(name, userId) {
+  try {
+    const { data, error } = await supabaseClient
+      .from("projects")
+      .insert([{ name, userId, components: { nodes: {} } }])
+      .select();
+
+    console.log("create new project", data, error);
+  } catch (error) {
+    console.log("error", error);
+  }
+}
+
+export async function fetchProjects(userId) {
+  try {
+    let { data: projects, error } = await supabaseClient
+      .from("projects")
+      .select("*")
+
+      // Filters
+      .eq("userId", userId);
+    return projects;
+  } catch (error) {
+    console.log("error", error);
+  }
+}
+
+export async function fetchProject(projectId, userId) {
+  try {
+    let { data: projects, error } = await supabaseClient
+      .from("projects")
+      .select("*")
+
+      // Filters
+      .eq("id", projectId)
+      .eq("userId", userId);
+
+    return projects;
+  } catch (error) {
+    console.log("error", error);
+  }
+}
+
+export async function updateProjectComponents(projectId, userId, components) {
+  try {
+    const { data, error } = await supabaseClient
+      .from("projects")
+      .update({ components })
+      .eq("userId", userId)
+      .eq("id", projectId)
+      .select();
+
+    console.log("update project components", data, error);
+  } catch (error) {
+    console.log("error", error);
+  }
+}

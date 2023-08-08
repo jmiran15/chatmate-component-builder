@@ -1,5 +1,6 @@
 import React, { useReducer, createContext, useContext } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { updateProjectComponents } from "../utils/supabase";
 
 // Create Context
 const GraphContext = createContext();
@@ -12,13 +13,15 @@ export const CREATE_NODE = "CREATE_NODE";
 export const DELETE_NODE = "DELETE_NODE";
 export const ADD_DEPENDENCY = "ADD_DEPENDENCY";
 export const EDIT_NODE = "EDIT_NODE";
+export const SET_STATE = "SET_STATE";
 
 // Reducer
 const graphReducer = (state, action) => {
   switch (action.type) {
-    case CREATE_NODE:
+    case CREATE_NODE: {
       const id = uuidv4();
-      return {
+
+      let components = {
         ...state,
         nodes: {
           ...state.nodes,
@@ -31,12 +34,25 @@ const graphReducer = (state, action) => {
         },
       };
 
-    case DELETE_NODE:
+      updateProjectComponents(action.projectId, action.userId, components)
+        .then((data) => console.log("created node"))
+        .catch((error) => console.log("error", error));
+
+      return components;
+    }
+    case DELETE_NODE: {
       const newNodes = { ...state.nodes };
       delete newNodes[action.payload];
-      return { ...state, nodes: newNodes };
 
-    case ADD_DEPENDENCY:
+      let components = { ...state, nodes: newNodes };
+
+      updateProjectComponents(action.projectId, action.userId, components)
+        .then((data) => console.log("deleted node"))
+        .catch((error) => console.log("error", error));
+
+      return components;
+    }
+    case ADD_DEPENDENCY: {
       if (
         action.payload.nodeId === action.payload.dependencyId ||
         (state.nodes[action.payload.dependencyId].dependencies &&
@@ -46,7 +62,7 @@ const graphReducer = (state, action) => {
       ) {
         return new Error("This would create a circular dependency");
       } else {
-        return {
+        let components = {
           ...state,
           nodes: {
             ...state.nodes,
@@ -59,10 +75,16 @@ const graphReducer = (state, action) => {
             },
           },
         };
-      }
 
-    case EDIT_NODE:
-      return {
+        updateProjectComponents(action.projectId, action.userId, components)
+          .then((data) => console.log("added dependency to node"))
+          .catch((error) => console.log("error", error));
+
+        return components;
+      }
+    }
+    case EDIT_NODE: {
+      let components = {
         ...state,
         nodes: {
           ...state.nodes,
@@ -73,6 +95,15 @@ const graphReducer = (state, action) => {
         },
       };
 
+      updateProjectComponents(action.projectId, action.userId, components)
+        .then((data) => console.log("created node"))
+        .catch((error) => console.log("error", error));
+
+      return components;
+    }
+    case SET_STATE: {
+      return action.payload;
+    }
     default:
       return state;
   }

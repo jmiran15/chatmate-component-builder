@@ -158,7 +158,6 @@ export default function Navigation({
           <UnstyledButton
             className={classes.mainLink}
             onClick={() => {
-              console.log("clicked");
               setSelectedPage(undefined);
               setOnChatPage(true);
             }}
