@@ -1,0 +1,46 @@
+# Binary Decision Tree
+
+<div id="outcomes"><details><summary></summary>
+
+* Relate the process of any comparison-based algorithm to a decision tree.
+
+</details></div>
+
+Here is a schematic representation of a decision tree corresponding to a comparison-based algorithm based on successive answers to yes/no questions (binary comparisons).
+
+<div class="center">
+<img src="/img/31/linear02.png" width="60%">
+</div>
+
+<span class="tag">Exercise</span> Draw a decision tree for performing linear search given a target value $x$ over the unordered array $[a_1, a_2, a_3]$.
+
+<details class="solution" data-release="Dec 7, 2022 17:00:00">
+<summary>Solution</summary>
+
+<div class="center">
+<img src="/img/31/linear03.png" width="85%">
+</div>
+
+</details>
+
+<span class="tag">Exercise</span> Draw a decision tree for performing binary search given a target value $x$ over the sorted array $[a_1, a_2, a_3]$.
+
+<details class="solution" data-release="Dec 7, 2022 17:00:00">
+<summary>Solution</summary>
+
+<div class="center">
+<img src="/img/31/linear04.png" width="100%">
+</div>
+
+</details>
+
+<span class="tag">Exercise</span> Draw a decision tree for performing a generic comparison-based sort algorithm to sort the array $[a_1, a_2, a_3]$.
+
+<details class="solution" data-release="Dec 7, 2022 17:00:00">
+<summary>Solution</summary>
+
+<div class="center">
+<img src="/img/31/linear05.png" width="100%">
+</div>
+
+</details>

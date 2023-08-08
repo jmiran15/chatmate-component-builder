@@ -24,7 +24,7 @@ import Components from "./pagesv2/projects/[projectId]/components/page.tsx";
 import Component from "./pagesv2/projects/[projectId]/components/[componentid]/page.tsx";
 import { GraphProvider } from "./contextv2/graph.tsx";
 import { ProjectProvider } from "./contextv2/project.tsx";
-
+import Settings from "./pagesv2/projects/[projectId]/settings/page.tsx";
 if (!process.env.REACT_APP_CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
@@ -64,7 +64,7 @@ function ClerkProviderWithRoutes() {
             <Route path="components" element={<Components />} />
             <Route path="components/:componentid" element={<Component />} />
             <Route path="api" element={<div>api</div>} />
-            <Route path="settings" element={<div>settings</div>} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           <Route
             path="/sign-in/*"

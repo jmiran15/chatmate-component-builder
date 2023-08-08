@@ -117,42 +117,39 @@ export default function Chat({ component }: { component: ChatInterface }) {
   });
 
   return (
-    <Stack align="flex-start">
+    <Stack w="100%">
       <TextInput
         label="Component name"
         placeholder="New chat component"
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-
-      <Group>
-        <NativeSelect
-          data={["gpt-4", "gpt-3.5-turbo", "gpt-3.5-turbo-16k"]}
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          label="Select the model you would like to use in this chain"
-        />
-        <NumberInput
-          label="Temperature"
-          defaultValue={0.7}
-          precision={1}
-          min={0}
-          step={0.1}
-          max={2}
-          value={temperature}
-          onChange={setTemperature}
-        />
-        <NumberInput
-          label="Max output tokens"
-          defaultValue={256}
-          precision={0}
-          min={1}
-          step={1}
-          max={2048}
-          value={maxTokens}
-          onChange={setMaxTokens}
-        />
-      </Group>
+      <NativeSelect
+        data={["gpt-4", "gpt-3.5-turbo", "gpt-3.5-turbo-16k"]}
+        value={model}
+        onChange={(e) => setModel(e.target.value)}
+        label="Select the model you would like to use in this chain"
+      />
+      <NumberInput
+        label="Temperature"
+        defaultValue={0.7}
+        precision={1}
+        min={0}
+        step={0.1}
+        max={2}
+        value={temperature}
+        onChange={setTemperature}
+      />
+      <NumberInput
+        label="Max output tokens"
+        defaultValue={256}
+        precision={0}
+        min={1}
+        step={1}
+        max={2048}
+        value={maxTokens}
+        onChange={setMaxTokens}
+      />
       <MentionsEditor
         object={system}
         value={systemMessage}

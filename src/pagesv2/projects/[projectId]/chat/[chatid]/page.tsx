@@ -9,8 +9,14 @@ import {
   Checkbox,
 } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
+import { OpenAIStream, StreamingTextResponse } from "ai";
+
 import React from "react";
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { dark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import rehypeRaw from "rehype-raw";
 import {
   CHAT_TYPE,
   DOCUMENT_TYPE,
@@ -56,7 +62,13 @@ export default function Chat() {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isVerbose, setIsVerbose] = useState(false);
-  const RESPONSE_UUID = dependencyOrder[dependencyOrder.length - 1][0].id;
+  const RESPONSE_UUID =
+    dependencyOrder[dependencyOrder.length - 1][
+      dependencyOrder[dependencyOrder.length - 1].length - 1
+    ].id;
+
+  console.log({ dependencyOrder });
+  console.log({ RESPONSE_UUID });
 
   useEffect(() => {
     // fetch messages from db
@@ -66,6 +78,7 @@ export default function Chat() {
       .from("messages")
       .select("*")
       .eq("chat", chatid)
+      .order("created_at", { ascending: true })
       .then(({ data, error }) => {
         if (error) {
           console.error(error);
@@ -100,13 +113,7 @@ export default function Chat() {
     };
   }, [messages]);
 
-  console.log({ dependencyOrder });
-
   let chains = transformData(messages);
-
-  console.log({
-    chains,
-  });
 
   async function sendQuery() {
     if (query === "") return;
@@ -117,6 +124,7 @@ export default function Chat() {
       ...messages,
       {
         id: uuidv4(),
+        created_at: new Date().toISOString(),
         role: "user",
         content: query,
         reference,
@@ -131,23 +139,16 @@ export default function Chat() {
     // function to process each chunk of data
 
     const processStreamChunk = (chunk: string) => {
-      console.log("PROCESSING: ", { chunk });
-
-      const results = chunk.matchAll(/"content":"(.*?)"/g);
-
-      for (let result of results) {
-        if (result && result[1] != null) {
-          setMessages((prevMessages) => {
-            const updatedMessages = [...prevMessages]; // Create a copy
-            const currentMessage = {
-              ...updatedMessages[updatedMessages.length - 1],
-            }; // Copy the current message
-            currentMessage.content += result[1]; // Update content
-            updatedMessages[updatedMessages.length - 1] = currentMessage; // Replace the message in the array
-            return updatedMessages; // Return the updated array
-          });
-        }
-      }
+      console.log("CHUNK: ", { chunk });
+      setMessages((prevMessages) => {
+        const updatedMessages = [...prevMessages]; // Create a copy
+        const currentMessage = {
+          ...updatedMessages[updatedMessages.length - 1],
+        }; // Copy the current message
+        currentMessage.content += chunk; // Update content
+        updatedMessages[updatedMessages.length - 1] = currentMessage; // Replace the message in the array
+        return updatedMessages; // Return the updated array
+      });
     };
 
     for (let i = 0; i < dependencyOrder.length; i++) {
@@ -161,15 +162,12 @@ export default function Chat() {
               (node as DocumentInterface).search_query
             );
 
-            console.log({ searchQuery });
-
             return fetchContexts(
               searchQuery,
               node.id,
               (node as DocumentInterface).number_documents,
               (node as DocumentInterface).similarity_threshold
             ).then((data) => {
-              console.log("fetchContexts: ", { data });
               return formatContexts(data);
             });
           }
@@ -211,7 +209,7 @@ export default function Chat() {
             });
 
             if (node.id === RESPONSE_UUID) {
-              console.log("THIS IS THE LAST COMPONENT");
+              console.log("starting streaming for: ", { node });
               return fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -225,7 +223,11 @@ export default function Chat() {
                   throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const reader = response.body.getReader();
+                const openaiStream = OpenAIStream(response);
+
+                console.log("the atcual stream: ", { openaiStream });
+
+                const reader = openaiStream.getReader();
                 const stream = new ReadableStream({
                   start(controller) {
                     // lets add the message to newMessages
@@ -233,6 +235,7 @@ export default function Chat() {
                       ...newMessages,
                       {
                         id: uuidv4(),
+                        created_at: new Date().toISOString(),
                         role: "assistant",
                         content: "",
                         reference,
@@ -242,20 +245,21 @@ export default function Chat() {
                       } as Message,
                     ];
 
-                    console.log("inside START: ", { newMessages });
-
                     function push() {
                       reader.read().then(({ done, value }) => {
+                        console.log("VALUES INSIDE IT: ", {
+                          done,
+                          value,
+                        });
+
                         // If there is no more data to read
                         if (done) {
-                          console.log("done", done);
                           controller.close();
                           return;
                         }
                         // Get the data and send it to the browser via the controller
                         controller.enqueue(value);
                         // Check chunks by logging to the console
-                        console.log(done, value);
 
                         // Convert to string
                         const chunkStr = new TextDecoder("utf-8").decode(value);
@@ -272,9 +276,10 @@ export default function Chat() {
                   },
                 });
 
-                return new Response(stream);
+                // return new Response(stream);
               });
             } else {
+              console.log("starting for: ", { node });
               return fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -286,6 +291,8 @@ export default function Chat() {
               })
                 .then((res) => res.json())
                 .then((data) => {
+                  console.log("fetch data: ", { data });
+
                   return {
                     data,
                     requestBody: req,
@@ -302,7 +309,12 @@ export default function Chat() {
 
       // eslint-disable-next-line no-loop-func
       dependencyOrder[i].forEach((node, index) => {
+        console.log("node: ", {
+          node,
+        });
+
         if (node.id === RESPONSE_UUID) {
+          console.log("last one");
           return;
         }
 
@@ -310,10 +322,11 @@ export default function Chat() {
           ...newMessages,
           {
             id: uuidv4(),
+            created_at: new Date().toISOString(),
             role: "assistant",
             content:
               node.type === CHAT_TYPE
-                ? results.data.choices[0].message.content
+                ? results[index].data.choices[0].message.content
                 : results[index],
             reference: reference,
             component: dependencyOrder[i][index].id,
@@ -389,7 +402,32 @@ function ChatMessage({ message, state, isVerbose }) {
       <Badge>
         {message.role === "user" ? "user" : state[message.component].name}
       </Badge>
-      <Text>{message.content}</Text>
+      {/* <Text style={{ overflowWrap: "break-word", wordBreak: "break-all" }}>
+        {message.content}
+      </Text> */}
+      {/* <ReactMarkdown
+        children={message.content}
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          code({ node, inline, className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className || "");
+            return !inline && match ? (
+              <SyntaxHighlighter
+                {...props}
+                children={String(children).replace(/\n$/, "")}
+                style={dark}
+                language={match[1]}
+                PreTag="div"
+              />
+            ) : (
+              <code {...props} className={className}>
+                {children}
+              </code>
+            );
+          },
+        }}
+      /> */}
+      <Content content={message.content} />
       {isVerbose && message.request_body && (
         <JsonView
           data={JSON.parse(message.request_body)}
@@ -398,6 +436,16 @@ function ChatMessage({ message, state, isVerbose }) {
         />
       )}
     </Flex>
+  );
+}
+
+function Content({ content }) {
+  console.log("rendering: ", content);
+
+  return (
+    <ReactMarkdown remarkPlugins={[]} rehypePlugins={[rehypeRaw]}>
+      {content}
+    </ReactMarkdown>
   );
 }
 

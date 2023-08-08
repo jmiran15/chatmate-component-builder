@@ -1,0 +1,57 @@
+# Counting Sort
+
+<div id="outcomes"><details><summary></summary>
+
+- Explain and trace Counting sort on a given sequence of data.
+- Justify the time and space complexity of Counting sort in the worst case, based on the data size and data range.
+
+</details></div>
+
+Imagine we are sorting a collection of (small) integers where the range of the values is known.
+
+<div class="note">
+
+Counting sort works by iterating through the input, counting the number of times each item occurs and using those counts to build the sorted array.
+
+</div>
+
+<details class="demo">
+<summary>Demo</summary>
+<div class="pdf" file="counting.pdf"></div>
+</details>
+
+<details class="resource">
+<summary>Analysis</summary>
+
+Counting sort has a $\Omicron(k+n)$ running time where input contains $n$ integers in the range $[0, k)$.
+
+* $\Omicron(k)$ to create the frequency table (counts array).
+* $\Omicron(n)$ to put $n$ values into frequency table.
+* $\Omicron(k)$ to reproduce the sorted sequence.
+
+Counting sort is efficient if the range of input data, $k$, is not significantly greater than the number of objects to be sorted, $n$.
+
+> If $k \in \Omicron(n)$ then counting sort runs in $\Omicron(n)$.
+
+Counting sort takes $\Omicron(n + k)$ space:
+  * $\Omicron(n)$ input space
+  * $\Omicron(k)$ auxiliary space
+
+Note that Counting sort only works when the range of potential items in the input is known ahead of time.
+
+</details>
+
+<details class="resource">
+<summary>Resources</summary>
+
+* Wikipedia's entry on [Counting sort](https://en.wikipedia.org/wiki/Counting_sort).
+* Brilliant's entry on [Counting sort](https://brilliant.org/wiki/counting-sort/).
+* HackerRank's tutorial on [Counting sort](https://www.hackerearth.com/practice/algorithms/sorting/counting-sort/tutorial/).
+
+<!--
+https://www.baeldung.com/java-counting-sort#42-stability
+
+https://www.cs.miami.edu/home/burt/learning/Csc517.091/workbook/countingsort.html
+-->
+
+</details>
