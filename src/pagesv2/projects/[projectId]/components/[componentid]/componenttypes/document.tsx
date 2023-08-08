@@ -8,6 +8,7 @@ import React, {
   useEffect,
 } from "react";
 import {
+  DOCUMENT_TYPE,
   Document as DocumentComponentInterface,
   UUID,
 } from "../../../../../../reducers/graph-reducer";
@@ -16,6 +17,7 @@ import { supabaseClient } from "../../../../../../utilsv2/supabase";
 import {
   USER_INPUT_UUID,
   getAvailableDependencies,
+  htmlToPlaceholder,
   placeholderToHtml,
 } from "../../../../../../utilsv2/helpers";
 import { useParams } from "react-router-dom";
@@ -149,39 +151,37 @@ export default function Document({
 
   console.log({ documents });
 
-  // load files/documents from supabase
-  useEffect(() => {}, [component.id]);
+  function handleSave() {
+    let component = {
+      name,
+      number_documents: numberDocuments,
+      similarity_threshold: similarityThreshold,
+      search_query: htmlToPlaceholder(search.current.getHtml()),
+    };
 
-  // function handleSave() {
-  // need to add TYPE
-  //   let component = {
-  //     name,
-  //     number_documents: numberDocuments,
-  //     similarity_threshold: similarityThreshold,
-  //     search_query: searchQuery,
-  //   };
+    supabaseClient
+      .from("document_components")
+      .update(component)
+      .eq("id", componentId)
+      .select()
+      .then(({ data, error }) => {
+        if (error) {
+          console.log(error);
+          return;
+        } else {
+          console.log(data);
+        }
+      });
 
-  //   supabaseClient
-  //     .from("document_components")
-  //     .update(component)
-  //     .eq("id", componentId)
-  //     .select()
-  //     .then(({ data, error }) => {
-  //       if (error) {
-  //         console.log(error);
-  //         return;
-  //       } else {
-  //         console.log(data);
-  //         dispatch({
-  //           type: "EDIT_NODE",
-  //           payload: {
-  //             id: componentId,
-  //             ...component,
-  //           },
-  //         });
-  //       }
-  //     });
-  // }
+    dispatch({
+      type: "EDIT_NODE",
+      payload: {
+        id: componentId as UUID,
+        type: DOCUMENT_TYPE,
+        ...component,
+      },
+    });
+  }
 
   return (
     <Stack w="100%">
@@ -241,50 +241,12 @@ export default function Document({
           </Button>
         </Tooltip>
         <Tooltip label="Save this chain">
-          <Button onClick={() => {}}>Save</Button>
+          <Button onClick={handleSave}>Save</Button>
         </Tooltip>
       </Group>
     </Stack>
   );
 }
-
-//     function handleSelectAll() {
-//       // if all documents are selected, unselect all
-//       if (selectedDocuments.length === documents.length) {
-//         setSelectedDocuments([])
-//       }
-//       // if some documents are selected, select all
-//       else if (selectedDocuments.length > 0) {
-//         setSelectedDocuments(documents.map((document) => document.id))
-//       }
-//       // if no documents are selected, select all
-//       else {
-//         setSelectedDocuments(documents.map((document) => document.id))
-//       }
-//       console.log("select all")
-//     }
-
-//     function handleDeleteDocuments() {
-//       // delete the selected documents, first from supabase, then update the state on success
-//       supabaseClient
-//         .from("documents")
-//         .delete()
-//         .in("id", selectedDocuments)
-//         .select("*")
-//         .then(({ data, error }) => {
-//           if (error) {
-//             console.log(error)
-//           }
-//           if (data) {
-//             console.log(data)
-//             setDocuments((documents) =>
-//               documents.filter((document) => !selectedDocuments.includes(document.id))
-//             )
-//             setSelectedDocuments([])
-//           }
-//         }
-//       )
-//     }
 
 const FileUpload = ({
   component,
@@ -410,22 +372,16 @@ const FileUpload = ({
 
   return (
     <form onSubmit={handleFormSubmit}>
-      {/* <input
-        type="file"
-        name="file"
-        multiple
-        accept=".txt,.csv,.html,.json,.md,.mdx,.pdf"
-        onChange={handleFileChange}
-      /> */}
-      <FileInput
-        label="Multiple"
-        placeholder="Multiple"
-        multiple
-        valueComponent={ValueComponent}
-        value={selectedFiles}
-        onChange={setSelectedFiles}
-      />
-      <Button type="submit">Upload</Button>
+      <Group>
+        <FileInput
+          placeholder="Multiple"
+          multiple
+          valueComponent={ValueComponent}
+          value={selectedFiles}
+          onChange={setSelectedFiles}
+        />
+        <Button type="submit">Upload</Button>
+      </Group>
     </form>
   );
 };

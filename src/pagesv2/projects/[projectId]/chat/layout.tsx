@@ -69,9 +69,15 @@ export default function ChatLayout() {
   return (
     <>
       {isChatSelected ? <Outlet /> : <Text>no chat selected</Text>}
-      <Aside p="md" width={{ sm: 200, lg: 300 }}>
-        <Button onClick={handleNewChat}>Create a new chat</Button>
+      <Aside
+        p="md"
+        width={{ sm: 200, lg: 300 }}
+        style={{
+          overflowY: "scroll",
+        }}
+      >
         <Stack spacing="xs">
+          <Button onClick={handleNewChat}>Create a new chat</Button>
           {chats.length > 0 ? (
             chats.map((chat) => <Link key={chat.id} chat={chat} />)
           ) : (
@@ -94,7 +100,7 @@ function Link({ chat }: { chat: Chat }) {
       sx={(theme) => ({
         display: "block",
         width: "100%",
-        padding: theme.spacing.xs,
+        padding: `${theme.spacing.xs}px ${theme.spacing.md}px`,
         borderRadius: theme.radius.sm,
         color:
           theme.colorScheme === "dark" ? theme.colors.dark[0] : theme.black,

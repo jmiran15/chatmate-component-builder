@@ -89,11 +89,6 @@ export default function Chat({ component }: { component: ChatInterface }) {
       user_message: htmlToPlaceholder(user.current.getHtml()),
     };
 
-    console.log({
-      componentattemptosave: component,
-      htmltosave: system.current.getHtml(),
-    });
-
     supabaseClient
       .from("chat_components")
       .update(component)
@@ -115,7 +110,6 @@ export default function Chat({ component }: { component: ChatInterface }) {
         ...component,
       },
     });
-    console.log("saved, new state: ", state);
   }
 
   console.log({

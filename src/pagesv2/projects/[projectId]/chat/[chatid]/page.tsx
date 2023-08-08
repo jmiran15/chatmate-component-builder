@@ -35,6 +35,8 @@ import {
   transformData,
   replaceContent,
   USER_INPUT_UUID,
+  fetchContexts,
+  formatContexts,
 } from "../../../../../utilsv2/helpers";
 
 export interface Message {
@@ -153,6 +155,27 @@ export default function Chat() {
       // eslint-disable-next-line no-loop-func
       const requests = row.map((node) => {
         switch (node.type) {
+          case DOCUMENT_TYPE: {
+            let searchQuery = replaceContent(
+              newMessages.filter((m) => m.reference === reference),
+              (node as DocumentInterface).search_query
+            );
+
+            console.log({ searchQuery });
+
+            return fetchContexts(
+              searchQuery,
+              node.id,
+              (node as DocumentInterface).number_documents,
+              (node as DocumentInterface).similarity_threshold
+            ).then((data) => {
+              console.log("fetchContexts: ", { data });
+              return formatContexts(data);
+            });
+          }
+          // we will also push to supabase the retrieved documents so that we can see it later in the logs
+          // then we will push this string output of the function to messages as a new message from this component. (which can then be used by other components)
+
           case CHAT_TYPE: {
             let system: string = replaceContent(
               newMessages.filter((m) => m.reference === reference),
@@ -277,9 +300,9 @@ export default function Chat() {
 
       const results = await Promise.all(requests);
 
-      results.forEach((res, index) => {
-        if (!res.data) {
-          // don't do anything if we don't have any data
+      // eslint-disable-next-line no-loop-func
+      dependencyOrder[i].forEach((node, index) => {
+        if (node.id === RESPONSE_UUID) {
           return;
         }
 
@@ -288,11 +311,15 @@ export default function Chat() {
           {
             id: uuidv4(),
             role: "assistant",
-            content: res.data.choices[0].message.content,
+            content:
+              node.type === CHAT_TYPE
+                ? results.data.choices[0].message.content
+                : results[index],
             reference: reference,
             component: dependencyOrder[i][index].id,
             chat: chatid,
-            request_body: res.requestBody,
+            request_body:
+              node.type === CHAT_TYPE ? results.requestBody : undefined,
           },
         ];
       });
@@ -363,9 +390,9 @@ function ChatMessage({ message, state, isVerbose }) {
         {message.role === "user" ? "user" : state[message.component].name}
       </Badge>
       <Text>{message.content}</Text>
-      {isVerbose && (
+      {isVerbose && message.request_body && (
         <JsonView
-          data={message.request_body ? JSON.parse(message.request_body) : {}}
+          data={JSON.parse(message.request_body)}
           shouldInitiallyExpand={() => false}
           style={defaultStyles}
         />
