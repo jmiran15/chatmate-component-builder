@@ -216,7 +216,9 @@ export function placeholderToHtml(text: string, state: Graph): string {
   return text.replace(
     /{{(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})}}/g,
     function (match, uuid) {
-      return `<span contenteditable="false" class="e-mention-chip"><span id="${uuid}$${state[uuid].name}">${state[uuid].name}</span></span>`;
+      return state[uuid]
+        ? `<span contenteditable="false" class="e-mention-chip"><span id="${uuid}$${state[uuid].name}">${state[uuid].name}</span></span>`
+        : "";
     }
   );
 }

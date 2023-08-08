@@ -1,13 +1,24 @@
 // we have the sidebar if size is large/ otherwise we have the burger menu
 import React from "react";
-import { Text, Aside, Button, Stack, UnstyledButton } from "@mantine/core";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import {
+  Text,
+  Aside,
+  Button,
+  Stack,
+  UnstyledButton,
+  Group,
+  ActionIcon,
+  TextInput,
+} from "@mantine/core";
+import { useHover } from "@mantine/hooks";
+import { Outlet, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { UUID } from "../../../../reducers/graph-reducer";
 import { ProjectContext } from "../../../../contextv2/project";
 import { supabaseClient } from "../../../../utilsv2/supabase";
 import { useAuth } from "@clerk/clerk-react";
 import { v4 as uuidv4 } from "uuid";
+import { IconCheck, IconPencil, IconTrash, IconX } from "@tabler/icons-react";
 
 export interface Chat {
   id: UUID;
@@ -24,6 +35,7 @@ export default function ChatLayout() {
   const [chats, setChats] = useState<Chat[]>([]);
   const { project } = useContext(ProjectContext);
   const { userId } = useAuth();
+  const { projectid } = useParams();
 
   useEffect(() => {
     // fetch the users chats
@@ -79,7 +91,14 @@ export default function ChatLayout() {
         <Stack spacing="xs">
           <Button onClick={handleNewChat}>Create a new chat</Button>
           {chats.length > 0 ? (
-            chats.map((chat) => <Link key={chat.id} chat={chat} />)
+            chats.map((chat) => (
+              <Link
+                key={chat.id}
+                chat={chat}
+                setChats={setChats}
+                projectid={projectid}
+              />
+            ))
           ) : (
             <p>no chats yet</p>
           )}
@@ -89,10 +108,59 @@ export default function ChatLayout() {
   );
 }
 
-function Link({ chat }: { chat: Chat }) {
+function Link({
+  chat,
+  setChats,
+  projectid,
+}: {
+  chat: Chat;
+  setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
+  projectid: UUID;
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = location.pathname.includes(chat.id);
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(chat.name);
+
+  function updateName() {
+    supabaseClient
+      .from("chats")
+      .update({ name })
+      .eq("id", chat.id)
+      .select("*")
+      .then(({ data, error }) => {
+        if (error) {
+          console.error(error);
+        } else {
+          setChats((prev) =>
+            prev.map((chat) => {
+              if (chat.id === data[0].id) {
+                return data[0];
+              } else {
+                return chat;
+              }
+            })
+          );
+          setIsEditing(false);
+        }
+      });
+  }
+
+  function handleDeleteChat() {
+    supabaseClient
+      .from("chats")
+      .delete()
+      .eq("id", chat.id)
+      .then(({ error }) => {
+        if (error) {
+          console.error(error);
+        } else {
+          setChats((prev) => prev.filter((p) => p.id !== chat.id));
+          navigate(`/projects/${projectid}/chat`);
+        }
+      });
+  }
 
   return (
     <UnstyledButton
@@ -100,7 +168,7 @@ function Link({ chat }: { chat: Chat }) {
       sx={(theme) => ({
         display: "block",
         width: "100%",
-        padding: `${theme.spacing.xs}px ${theme.spacing.md}px`,
+        padding: theme.spacing.sm,
         borderRadius: theme.radius.sm,
         color:
           theme.colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
@@ -118,7 +186,69 @@ function Link({ chat }: { chat: Chat }) {
           : "transparent",
       })}
     >
-      <Text size="sm">{chat.name}</Text>
+      <Group position="apart">
+        {!isEditing ? (
+          <Text size="sm">{name}</Text>
+        ) : (
+          <TextInput
+            size="sm"
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+          />
+        )}
+        {isActive && (
+          <Group spacing="0">
+            <ActionIcon
+              variant="transparent"
+              sx={(theme) => ({
+                color:
+                  theme.colorScheme === "dark"
+                    ? theme.colors.dark[2]
+                    : theme.colors.gray[5],
+
+                "&:hover": {
+                  color:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[6]
+                      : theme.colors.gray[7],
+                },
+              })}
+              onClick={!isEditing ? () => setIsEditing(true) : updateName}
+            >
+              {!isEditing ? (
+                <IconPencil size="1.125rem" />
+              ) : (
+                <IconCheck size="1.125rem" />
+              )}
+            </ActionIcon>
+            <ActionIcon
+              variant="transparent"
+              onClick={
+                !isEditing ? handleDeleteChat : () => setIsEditing(false)
+              }
+              sx={(theme) => ({
+                color:
+                  theme.colorScheme === "dark"
+                    ? theme.colors.dark[2]
+                    : theme.colors.gray[5],
+
+                "&:hover": {
+                  color:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[6]
+                      : theme.colors.gray[7],
+                },
+              })}
+            >
+              {!isEditing ? (
+                <IconTrash size="1.125rem" />
+              ) : (
+                <IconX size="1.125rem" />
+              )}
+            </ActionIcon>
+          </Group>
+        )}
+      </Group>
     </UnstyledButton>
   );
 }

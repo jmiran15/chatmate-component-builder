@@ -1,6 +1,8 @@
 import {
   CHAT_TYPE,
   Chat as ChatInterface,
+  DELETE_NODE,
+  EDIT_NODE,
   UUID,
 } from "../../../../../../reducers/graph-reducer";
 import {
@@ -11,7 +13,7 @@ import {
 } from "../../../../../../utilsv2/helpers";
 import { useGraph } from "../../../../../../contextv2/graph";
 import { supabaseClient } from "../../../../../../utilsv2/supabase";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useMemo } from "react";
 import {
   Button,
@@ -27,6 +29,7 @@ import {
 import MentionsEditor from "../../../../../../componentsv2/MentionsEditor";
 
 export default function Chat({ component }: { component: ChatInterface }) {
+  const navigate = useNavigate();
   const { state, dispatch } = useGraph();
   // SHOULD PASS THIS IN MAIN PAGE, SINCE USED BY MOST COMPONENTS
   let availableVariables = [
@@ -41,7 +44,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
       };
     }),
   ];
-  const { componentid } = useParams();
+  const { componentid, projectid } = useParams();
   const [name, setName] = useState<string>(component.name);
   const [model, setModel] = useState<string>(component.model);
   const [temperature, setTemperature] = useState<number>(component.temperature);
@@ -103,7 +106,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
         }
       });
     dispatch({
-      type: "EDIT_NODE",
+      type: EDIT_NODE,
       payload: {
         id: componentid as UUID,
         type: CHAT_TYPE,
@@ -112,9 +115,23 @@ export default function Chat({ component }: { component: ChatInterface }) {
     });
   }
 
-  console.log({
-    availableVariables,
-  });
+  function handleDelete() {
+    supabaseClient
+      .from("chat_components")
+      .delete()
+      .eq("id", componentid)
+      .then(({ error }) => {
+        if (error) {
+          console.log(error);
+          return;
+        }
+      });
+    dispatch({
+      type: DELETE_NODE,
+      payload: componentid as UUID,
+    });
+    navigate(`/projects/${projectid}/components`);
+  }
 
   return (
     <Stack w="100%">
@@ -165,7 +182,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
 
       <Group w="100%" position="apart">
         <Tooltip label="Delete this chain">
-          <Button variant="light" color="red" onClick={() => {}}>
+          <Button variant="light" color="red" onClick={handleDelete}>
             Delete
           </Button>
         </Tooltip>
@@ -175,10 +192,4 @@ export default function Chat({ component }: { component: ChatInterface }) {
       </Group>
     </Stack>
   );
-}
-
-function handleDelete() {
-  // delete from supabase
-  // dispatch changes to graph
-  // navigate back to components page
 }

@@ -8,6 +8,7 @@ import React, {
   useEffect,
 } from "react";
 import {
+  DELETE_NODE,
   DOCUMENT_TYPE,
   Document as DocumentComponentInterface,
   UUID,
@@ -20,7 +21,7 @@ import {
   htmlToPlaceholder,
   placeholderToHtml,
 } from "../../../../../../utilsv2/helpers";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Button,
   Group,
@@ -83,8 +84,9 @@ export default function Document({
       };
     }),
   ];
-  const { componentid } = useParams();
+  const { componentid, projectid } = useParams();
   let componentId = component.id;
+  const navigate = useNavigate();
   const [name, setName] = useState<string>(component.name);
   const [numberDocuments, setNumberDocuments] = useState<number>(
     component.number_documents
@@ -183,6 +185,46 @@ export default function Document({
     });
   }
 
+  function handleDelete() {
+    supabaseClient
+      .from("document_components")
+      .delete()
+      .eq("id", componentid)
+      .then(({ error }) => {
+        if (error) {
+          console.log(error);
+          return;
+        }
+      });
+    dispatch({
+      type: DELETE_NODE,
+      payload: componentid as UUID,
+    });
+    navigate(`/projects/${projectid}/components`);
+  }
+
+  function handleDeleteDocuments() {
+    console.log({ selectedRows: gridRef.current.api.getSelectedRows() });
+    // lets delete it from supabase and then we will delete it from the state
+
+    let selectedRows = gridRef.current.api.getSelectedRows();
+
+    let ids = selectedRows.map((row) => row.id);
+
+    supabaseClient
+      .from("documents")
+      .delete()
+      .in("id", ids)
+      .then(({ error }) => {
+        if (error) {
+          console.log(error);
+          return;
+        }
+      });
+
+    setDocuments(documents.filter((doc) => !ids.includes(doc.id)));
+  }
+
   return (
     <Stack w="100%">
       <TextInput
@@ -217,7 +259,7 @@ export default function Document({
       />
       <Group>
         <FileUpload component={component} setDocuments={setDocuments} />
-        <Button variant="light" color="red" onClick={() => {}}>
+        <Button variant="light" color="red" onClick={handleDeleteDocuments}>
           Delete selected document/s
         </Button>
       </Group>
@@ -236,7 +278,7 @@ export default function Document({
       </div>
       <Group w="100%" position="apart">
         <Tooltip label="Delete this chain">
-          <Button variant="light" color="red" onClick={() => {}}>
+          <Button variant="light" color="red" onClick={handleDelete}>
             Delete
           </Button>
         </Tooltip>

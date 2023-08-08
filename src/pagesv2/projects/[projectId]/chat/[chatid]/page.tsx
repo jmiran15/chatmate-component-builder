@@ -332,7 +332,7 @@ export default function Chat() {
             component: dependencyOrder[i][index].id,
             chat: chatid,
             request_body:
-              node.type === CHAT_TYPE ? results.requestBody : undefined,
+              node.type === CHAT_TYPE ? results[index].requestBody : undefined,
           },
         ];
       });

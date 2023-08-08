@@ -43,7 +43,7 @@ export type CreateAction = {
 
 export type DeleteAction = {
   type: typeof DELETE_NODE;
-  payload: Chat | Document;
+  payload: UUID;
 };
 
 export type EditAction = {
@@ -69,7 +69,20 @@ export function graphReducer(state: Graph, action: Action): Graph {
       } as Graph;
     }
     case DELETE_NODE: {
-      return omit(state, action.payload.id as UUID) as Graph;
+      const updatedGraph = { ...state };
+      const deletedId = action.payload as UUID;
+
+      // delete the node itself
+      delete updatedGraph[deletedId];
+
+      // Look for dependencies
+      for (const nodeId in updatedGraph) {
+        const node: Chat | Document = updatedGraph[nodeId] as Chat | Document;
+        // Remove deletedId from dependencies list
+        node.dependencies = node.dependencies.filter((id) => id !== deletedId);
+      }
+
+      return updatedGraph as Graph;
     }
     case EDIT_NODE: {
       console.log({
