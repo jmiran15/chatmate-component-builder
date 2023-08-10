@@ -441,7 +441,7 @@ const FileUpload = ({
         formData.append("filenames", file.name);
       });
 
-      const response = await fetch("http://137.184.120.81/upload", {
+      const response = await fetch("https://rough-surf-7816.fly.dev/upload", {
         method: "POST",
         body: formData,
       });
