@@ -1,5 +1,4 @@
 export async function embed(input: string) {
-  console.log("api key: ", process.env.REACT_APP_OPENAI);
   const url = "https://api.openai.com/v1/embeddings";
   const options = {
     method: "POST",

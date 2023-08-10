@@ -28,13 +28,13 @@ export default function Projects() {
     supabaseClient
       .from("projects")
       .select("*")
+      .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) {
           console.log({ error });
           return;
         }
         if (data) {
-          console.log({ projects: data });
           setProjects(data);
         }
       });
@@ -51,7 +51,6 @@ export default function Projects() {
           return;
         }
         if (data) {
-          console.log({ projects: data });
           setProjects((projects) => [...projects, ...data]);
         }
       });

@@ -2,6 +2,7 @@ import {
   CHAT_TYPE,
   Chat as ChatInterface,
   DELETE_NODE,
+  DOCUMENT_TYPE,
   EDIT_NODE,
   UUID,
 } from "../../../../../../reducers/graph-reducer";
@@ -21,10 +22,8 @@ import {
   NativeSelect,
   NumberInput,
   Stack,
-  Text,
   TextInput,
   Tooltip,
-  Input,
 } from "@mantine/core";
 import MentionsEditor from "../../../../../../componentsv2/MentionsEditor";
 
@@ -55,6 +54,12 @@ export default function Chat({ component }: { component: ChatInterface }) {
       [USER_INPUT_UUID]: {
         name: "User input",
         id: USER_INPUT_UUID,
+        number_documents: 0,
+        similarity_threshold: 0,
+        search_query: "",
+        dependencies: [],
+        project: USER_INPUT_UUID,
+        type: DOCUMENT_TYPE,
       },
     });
   }, [component.system_message, state]);
@@ -64,11 +69,17 @@ export default function Chat({ component }: { component: ChatInterface }) {
       [USER_INPUT_UUID]: {
         name: "User input",
         id: USER_INPUT_UUID,
+        number_documents: 0,
+        similarity_threshold: 0,
+        search_query: "",
+        dependencies: [],
+        project: USER_INPUT_UUID,
+        type: DOCUMENT_TYPE,
       },
     });
   }, [component.user_message, state]);
-  let system = useRef(null);
-  let user = useRef(null);
+  let system = useRef<{ getHtml: () => string } | null>(null);
+  let user = useRef<{ getHtml: () => string } | null>(null);
 
   // when we save, we convert the text with mentions back to our format
 
@@ -88,8 +99,8 @@ export default function Chat({ component }: { component: ChatInterface }) {
       model,
       temperature,
       max_tokens: maxTokens,
-      system_message: htmlToPlaceholder(system.current.getHtml()),
-      user_message: htmlToPlaceholder(user.current.getHtml()),
+      system_message: htmlToPlaceholder(system.current!.getHtml()),
+      user_message: htmlToPlaceholder(user.current!.getHtml()),
     };
 
     supabaseClient
@@ -155,7 +166,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
         step={0.1}
         max={2}
         value={temperature}
-        onChange={setTemperature}
+        onChange={setTemperature as (value: number | "") => void}
       />
       <NumberInput
         label="Max output tokens"
@@ -165,7 +176,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
         step={1}
         max={2048}
         value={maxTokens}
-        onChange={setMaxTokens}
+        onChange={setMaxTokens as (value: number | "") => void}
       />
       <MentionsEditor
         object={system}

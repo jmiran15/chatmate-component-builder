@@ -69,7 +69,8 @@ export const GraphProvider = ({ children }: { children: React.ReactNode }) => {
   // this memo works for the order, but the actual contents of the components should be synch with state
   const dependencyOrder = useMemo(() => {
     return topologicalSort(state);
-  }, [depsMap]);
+  }, [state]);
+  // was depending on despsMap before, but this doesnt update when small changes are made
 
   return (
     <GraphContext.Provider

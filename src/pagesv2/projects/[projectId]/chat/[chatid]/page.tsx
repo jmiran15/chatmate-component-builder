@@ -3,31 +3,30 @@ import {
   Flex,
   Grid,
   Stack,
-  Text,
   Textarea,
   Badge,
   Checkbox,
 } from "@mantine/core";
-import { useViewportSize } from "@mantine/hooks";
-import { OpenAIStream, StreamingTextResponse } from "ai";
+import { OpenAIStream } from "ai";
 
 import React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { dark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { a11yDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeRaw from "rehype-raw";
 import {
   CHAT_TYPE,
   DOCUMENT_TYPE,
   UUID,
+  Graph,
   Document as DocumentInterface,
   Chat as ChatInterface,
 } from "../../../../../reducers/graph-reducer";
 import {
   JsonView,
-  allExpanded,
-  darkStyles,
+  // allExpanded,
+  // darkStyles,
   defaultStyles,
 } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
@@ -46,6 +45,7 @@ import {
 } from "../../../../../utilsv2/helpers";
 
 export interface Message {
+  created_at: string;
   id: UUID;
   role: "user" | "assistant";
   content: string;
@@ -56,8 +56,8 @@ export interface Message {
 }
 
 export default function Chat() {
-  const { height } = useViewportSize();
   const { dependencyOrder, state } = useGraph();
+  const chatBottomRef = useRef<HTMLDivElement>(null);
   const { chatid } = useParams();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -67,8 +67,10 @@ export default function Chat() {
       dependencyOrder[dependencyOrder.length - 1].length - 1
     ].id;
 
-  console.log({ dependencyOrder });
-  console.log({ RESPONSE_UUID });
+  useEffect(() => {
+    // scroll down
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     // fetch messages from db
@@ -83,7 +85,6 @@ export default function Chat() {
         if (error) {
           console.error(error);
         } else {
-          console.log({ messages: data });
           setMessages(data);
         }
       });
@@ -111,9 +112,9 @@ export default function Chat() {
       batchUpdate.cancel();
       batchUpdate.flush();
     };
-  }, [messages]);
+  }, [messages, batchUpdate]);
 
-  let chains = transformData(messages);
+  let chains: { [key: string]: Message[] } = transformData(messages);
 
   async function sendQuery() {
     if (query === "") return;
@@ -139,7 +140,6 @@ export default function Chat() {
     // function to process each chunk of data
 
     const processStreamChunk = (chunk: string) => {
-      console.log("CHUNK: ", { chunk });
       setMessages((prevMessages) => {
         const updatedMessages = [...prevMessages]; // Create a copy
         const currentMessage = {
@@ -188,9 +188,9 @@ export default function Chat() {
             let history = chains[node.id] || [];
 
             let req = JSON.stringify({
-              model: node.model,
-              temperature: node.temperature,
-              max_tokens: node.max_tokens,
+              model: (node as ChatInterface).model,
+              temperature: (node as ChatInterface).temperature,
+              max_tokens: (node as ChatInterface).max_tokens,
               stream: node.id === RESPONSE_UUID, // Enable streaming only for the RESPONSE_UUID component,
               messages: [
                 {
@@ -209,7 +209,6 @@ export default function Chat() {
             });
 
             if (node.id === RESPONSE_UUID) {
-              console.log("starting streaming for: ", { node });
               return fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -225,10 +224,8 @@ export default function Chat() {
 
                 const openaiStream = OpenAIStream(response);
 
-                console.log("the atcual stream: ", { openaiStream });
-
                 const reader = openaiStream.getReader();
-                const stream = new ReadableStream({
+                new ReadableStream({
                   start(controller) {
                     // lets add the message to newMessages
                     newMessages = [
@@ -247,11 +244,6 @@ export default function Chat() {
 
                     function push() {
                       reader.read().then(({ done, value }) => {
-                        console.log("VALUES INSIDE IT: ", {
-                          done,
-                          value,
-                        });
-
                         // If there is no more data to read
                         if (done) {
                           controller.close();
@@ -279,7 +271,6 @@ export default function Chat() {
                 // return new Response(stream);
               });
             } else {
-              console.log("starting for: ", { node });
               return fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -291,8 +282,6 @@ export default function Chat() {
               })
                 .then((res) => res.json())
                 .then((data) => {
-                  console.log("fetch data: ", { data });
-
                   return {
                     data,
                     requestBody: req,
@@ -309,12 +298,7 @@ export default function Chat() {
 
       // eslint-disable-next-line no-loop-func
       dependencyOrder[i].forEach((node, index) => {
-        console.log("node: ", {
-          node,
-        });
-
         if (node.id === RESPONSE_UUID) {
-          console.log("last one");
           return;
         }
 
@@ -326,13 +310,25 @@ export default function Chat() {
             role: "assistant",
             content:
               node.type === CHAT_TYPE
-                ? results[index].data.choices[0].message.content
+                ? (
+                    results[index] as {
+                      data: any;
+                      requestBody: string;
+                    }
+                  )?.data.choices[0].message.content
                 : results[index],
             reference: reference,
             component: dependencyOrder[i][index].id,
             chat: chatid,
             request_body:
-              node.type === CHAT_TYPE ? results[index].requestBody : undefined,
+              node.type === CHAT_TYPE
+                ? (
+                    results[index] as {
+                      data: any;
+                      requestBody: string;
+                    }
+                  )?.requestBody
+                : undefined,
           },
         ];
       });
@@ -342,8 +338,11 @@ export default function Chat() {
   }
 
   return (
-    <Stack w="100%" align="center" justify="space-between" h={height - 70 - 16}>
+    <Stack w="100%" align="center" justify="space-between" h="80vh">
       <Checkbox
+        style={{
+          alignSelf: "flex-start",
+        }}
         label="verbose"
         checked={isVerbose}
         onChange={(e) => setIsVerbose(e.currentTarget.checked)}
@@ -354,12 +353,24 @@ export default function Chat() {
         isVerbose={isVerbose}
         RESPONSE_UUID={RESPONSE_UUID}
       />
+      <div id="chat-bottom" ref={chatBottomRef} />
+
       <ChatInput query={query} setQuery={setQuery} sendQuery={sendQuery} />
     </Stack>
   );
 }
 
-function Messages({ messages, state, isVerbose, RESPONSE_UUID }) {
+function Messages({
+  messages,
+  state,
+  isVerbose,
+  RESPONSE_UUID,
+}: {
+  messages: Message[];
+  state: Graph;
+  isVerbose: boolean;
+  RESPONSE_UUID: UUID;
+}) {
   if (!isVerbose) {
     messages = messages.filter(
       (message: Message) =>
@@ -387,7 +398,15 @@ function Messages({ messages, state, isVerbose, RESPONSE_UUID }) {
   );
 }
 
-function ChatMessage({ message, state, isVerbose }) {
+function ChatMessage({
+  message,
+  state,
+  isVerbose,
+}: {
+  message: Message;
+  state: Graph;
+  isVerbose: boolean;
+}) {
   return (
     <Flex
       direction="column"
@@ -402,35 +421,10 @@ function ChatMessage({ message, state, isVerbose }) {
       <Badge>
         {message.role === "user" ? "user" : state[message.component].name}
       </Badge>
-      {/* <Text style={{ overflowWrap: "break-word", wordBreak: "break-all" }}>
-        {message.content}
-      </Text> */}
-      {/* <ReactMarkdown
-        children={message.content}
-        rehypePlugins={[rehypeRaw]}
-        components={{
-          code({ node, inline, className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || "");
-            return !inline && match ? (
-              <SyntaxHighlighter
-                {...props}
-                children={String(children).replace(/\n$/, "")}
-                style={dark}
-                language={match[1]}
-                PreTag="div"
-              />
-            ) : (
-              <code {...props} className={className}>
-                {children}
-              </code>
-            );
-          },
-        }}
-      /> */}
       <Content content={message.content} />
       {isVerbose && message.request_body && (
         <JsonView
-          data={JSON.parse(message.request_body)}
+          data={JSON.parse(message.request_body as string)}
           shouldInitiallyExpand={() => false}
           style={defaultStyles}
         />
@@ -439,17 +433,46 @@ function ChatMessage({ message, state, isVerbose }) {
   );
 }
 
-function Content({ content }) {
-  console.log("rendering: ", content);
-
+function Content({ content }: { content: string }) {
   return (
-    <ReactMarkdown remarkPlugins={[]} rehypePlugins={[rehypeRaw]}>
-      {content}
-    </ReactMarkdown>
+    <ReactMarkdown
+      remarkPlugins={[]}
+      rehypePlugins={[rehypeRaw]}
+      children={content}
+      components={{
+        code({ node, inline, className, children, ...props }) {
+          const match = /language-(\w+)/.exec(className || "");
+          return !inline && match ? (
+            <SyntaxHighlighter
+              {...props}
+              children={String(children).replace(/\n$/, "")}
+              style={a11yDark}
+              customStyle={{
+                width: "100%",
+              }}
+              language={match[1]}
+              PreTag="div"
+            />
+          ) : (
+            <code {...props} className={className}>
+              {children}
+            </code>
+          );
+        },
+      }}
+    />
   );
 }
 
-function ChatInput({ query, setQuery, sendQuery }) {
+function ChatInput({
+  query,
+  setQuery,
+  sendQuery,
+}: {
+  query: string;
+  setQuery: (query: string) => void;
+  sendQuery: () => void;
+}) {
   return (
     <Grid w="100%" m={0}>
       <Grid.Col span="auto">

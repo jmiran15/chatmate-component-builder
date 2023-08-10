@@ -1,3 +1,6 @@
+import { ColorSchemeProvider, MantineProvider } from "@mantine/core";
+import Loadable from "./componentsv2/Loadable.tsx";
+import { lazy, useState } from "react";
 import "../node_modules/@syncfusion/ej2-base/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-icons/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-buttons/styles/bootstrap5.css";
@@ -8,23 +11,37 @@ import "../node_modules/@syncfusion/ej2-navigations/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-popups/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-react-richtexteditor/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-react-dropdowns/styles/bootstrap5.css";
-import { ColorSchemeProvider, MantineProvider } from "@mantine/core";
-import Shell from "./pagesv2/layout.tsx";
 import { useNavigate } from "react-router-dom";
 import { registerLicense } from "@syncfusion/ej2-base";
-import { useState } from "react";
-import Landing from "./pagesv2/page.tsx";
-import Projects from "./pagesv2/projects/page.tsx";
-import Project from "./pagesv2/projects/[projectId]/layout.tsx";
 import { ClerkProvider, SignIn, SignUp } from "@clerk/clerk-react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import ChatLayout from "./pagesv2/projects/[projectId]/chat/layout.tsx";
-import Chat from "./pagesv2/projects/[projectId]/chat/[chatid]/page.tsx";
-import Components from "./pagesv2/projects/[projectId]/components/page.tsx";
-import Component from "./pagesv2/projects/[projectId]/components/[componentid]/page.tsx";
 import { GraphProvider } from "./contextv2/graph.tsx";
 import { ProjectProvider } from "./contextv2/project.tsx";
-import Settings from "./pagesv2/projects/[projectId]/settings/page.tsx";
+import Protected from "./pagesv2/protected.jsx";
+const Shell = Loadable(lazy(() => import("./pagesv2/layout.tsx")));
+const Landing = Loadable(lazy(() => import("./pagesv2/page.tsx")));
+const Projects = Loadable(lazy(() => import("./pagesv2/projects/page.tsx")));
+const Project = Loadable(
+  lazy(() => import("./pagesv2/projects/[projectId]/layout.tsx"))
+);
+const ChatLayout = Loadable(
+  lazy(() => import("./pagesv2/projects/[projectId]/chat/layout.tsx"))
+);
+const Chat = Loadable(
+  lazy(() => import("./pagesv2/projects/[projectId]/chat/[chatid]/page.tsx"))
+);
+const Components = Loadable(
+  lazy(() => import("./pagesv2/projects/[projectId]/components/page.tsx"))
+);
+const Component = Loadable(
+  lazy(() =>
+    import("./pagesv2/projects/[projectId]/components/[componentid]/page.tsx")
+  )
+);
+const Settings = Loadable(
+  lazy(() => import("./pagesv2/projects/[projectId]/settings/page.tsx"))
+);
+
 if (!process.env.REACT_APP_CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
@@ -54,17 +71,19 @@ function ClerkProviderWithRoutes() {
   return (
     <ClerkProvider publishableKey={clerkPubKey} navigate={(to) => navigate(to)}>
       <Routes>
-        <Route element={<Shell />}>
+        <Route path="/" element={<Shell />}>
           <Route path="/" element={<Landing />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:projectid" element={<Project />}>
-            <Route path="chat" element={<ChatLayout />}>
-              <Route path=":chatid" element={<Chat />} />
+          <Route path="/" element={<Protected />}>
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:projectid" element={<Project />}>
+              <Route path="chat" element={<ChatLayout />}>
+                <Route path=":chatid" element={<Chat />} />
+              </Route>
+              <Route path="components" element={<Components />} />
+              <Route path="components/:componentid" element={<Component />} />
+              <Route path="api" element={<div>api</div>} />
+              <Route path="settings" element={<Settings />} />
             </Route>
-            <Route path="components" element={<Components />} />
-            <Route path="components/:componentid" element={<Component />} />
-            <Route path="api" element={<div>api</div>} />
-            <Route path="settings" element={<Settings />} />
           </Route>
           <Route
             path="/sign-in/*"

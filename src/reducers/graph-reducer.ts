@@ -1,5 +1,5 @@
 import { wouldCreateCycle, getDependencies } from "../utilsv2/helpers";
-import omit from "lodash/omit";
+// import omit from "lodash/omit";
 const uuidv4 = require("uuid");
 
 export type UUID = ReturnType<typeof uuidv4>;
@@ -85,9 +85,6 @@ export function graphReducer(state: Graph, action: Action): Graph {
       return updatedGraph as Graph;
     }
     case EDIT_NODE: {
-      console.log({
-        getDependencies: getDependencies(action.payload as Document | Chat),
-      });
       return {
         ...state,
         [action.payload.id as UUID]: {

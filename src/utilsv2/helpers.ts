@@ -55,8 +55,6 @@ export function wouldCreateCycle(
     return false;
   }
 
-  console.log("would create cycle", node, newDep, dfs(node));
-
   return dfs(node);
 }
 
@@ -231,8 +229,6 @@ export async function fetchContexts(
 ) {
   const embeddingResponse = await embed(query);
 
-  console.log(embeddingResponse);
-
   let { data } = await supabaseClient.rpc("match_documents", {
     component,
     embedding: embeddingResponse.data[0].embedding,
@@ -267,7 +263,7 @@ export function transformData(messageArray: Message[]) {
     (message) => message.role === "assistant"
   );
 
-  let chains = {};
+  let chains: { [key: string]: Message[] } = {};
 
   for (let assistantMessage of assistantMessages) {
     let chain = (chains[assistantMessage.component] =
@@ -289,7 +285,6 @@ export function transformData(messageArray: Message[]) {
 
 export function replaceContent(messages: Message[], str: string) {
   let replacedStr = str;
-  console.log("in post: ", { messages, str });
   messages.forEach((el) => {
     const regex = new RegExp(`{{${el.component}}}`, "g");
     replacedStr = replacedStr.replace(regex, el.content);

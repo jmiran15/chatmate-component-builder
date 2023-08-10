@@ -13,7 +13,7 @@ export function ProjectCard({ project }: { project: Project }) {
   const navigate = useNavigate();
 
   function handleClick() {
-    navigate(`/projects/${project.id}`);
+    navigate(`/projects/${project.id}/chat`);
   }
 
   return (

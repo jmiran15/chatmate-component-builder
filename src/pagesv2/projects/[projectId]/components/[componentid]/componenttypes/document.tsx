@@ -1,12 +1,4 @@
-"use strict";
-
-import React, {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  useEffect,
-} from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   DELETE_NODE,
   DOCUMENT_TYPE,
@@ -21,6 +13,7 @@ import {
   htmlToPlaceholder,
   placeholderToHtml,
 } from "../../../../../../utilsv2/helpers";
+import { useDisclosure } from "@mantine/hooks";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Button,
@@ -33,6 +26,8 @@ import {
   FileInputProps,
   Center,
   rem,
+  Modal,
+  Textarea,
 } from "@mantine/core";
 import MentionsEditor from "../../../../../../componentsv2/MentionsEditor";
 import { AgGridReact } from "ag-grid-react"; // the AG Grid React Component
@@ -72,6 +67,7 @@ export default function Document({
   component: DocumentComponentInterface;
 }) {
   const { state, dispatch } = useGraph();
+  const [opened, { open, close }] = useDisclosure(false);
   let availableVariables = [
     {
       name: "User input",
@@ -100,23 +96,29 @@ export default function Document({
       [USER_INPUT_UUID]: {
         name: "User input",
         id: USER_INPUT_UUID,
+        number_documents: 0,
+        similarity_threshold: 0,
+        search_query: "",
+        dependencies: [],
+        project: USER_INPUT_UUID,
+        type: DOCUMENT_TYPE,
       },
     });
   }, [component.search_query, state]);
-  const search = useRef(null);
+  const search = useRef<{ getHtml: () => string } | null>(null);
   const [documents, setDocuments] = useState<DocumentInterface[]>([]);
 
-  const gridRef = useRef();
+  const gridRef = useRef<any>(null);
   const containerStyle = useMemo(
     () => ({ width: "100%", height: "100vh" }),
     []
   );
   const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []);
-  const [columnDefs, setColumnDefs] = useState([
+  const [columnDefs, setColumnDefs] = useState<any>([
     {
       headerName: "File name",
       field: "file",
-      valueGetter: (params) => params.data.metadata.file,
+      valueGetter: (params: any) => params.data.metadata.file,
       headerCheckboxSelection: true,
       checkboxSelection: true,
     },
@@ -134,16 +136,16 @@ export default function Document({
   }, []);
 
   const onGridReady = useCallback(
-    (params) => {
+    (params: any) => {
       supabaseClient
         .from("documents")
         .select("*")
+        .order("created_at", { ascending: false })
         .eq("component", component.id)
         .then(({ data, error }) => {
           if (error) {
             console.log(error);
           } else {
-            console.log({ data });
             setDocuments(data as DocumentInterface[]);
           }
         });
@@ -151,14 +153,12 @@ export default function Document({
     [component.id]
   );
 
-  console.log({ documents });
-
   function handleSave() {
     let component = {
       name,
       number_documents: numberDocuments,
       similarity_threshold: similarityThreshold,
-      search_query: htmlToPlaceholder(search.current.getHtml()),
+      search_query: htmlToPlaceholder(search.current!.getHtml()),
     };
 
     supabaseClient
@@ -204,12 +204,11 @@ export default function Document({
   }
 
   function handleDeleteDocuments() {
-    console.log({ selectedRows: gridRef.current.api.getSelectedRows() });
     // lets delete it from supabase and then we will delete it from the state
 
     let selectedRows = gridRef.current.api.getSelectedRows();
 
-    let ids = selectedRows.map((row) => row.id);
+    let ids = selectedRows.map((row: any) => row.id);
 
     supabaseClient
       .from("documents")
@@ -225,8 +224,121 @@ export default function Document({
     setDocuments(documents.filter((doc) => !ids.includes(doc.id)));
   }
 
+  function handleCellClicked(event: any) {
+    // open the modal with the data
+    setSelectedDocument(event.data);
+    open();
+  }
+
+  async function updateDocument(document: any) {
+    // splitting large files into chunks
+    let chunkSize = 1000;
+    let overlap = 200;
+    let chunks = [document]
+      .map((doc: DocumentInterface) => {
+        let tokens = doc.content.split(/\s/);
+        if (tokens.length > chunkSize) {
+          return splitTextByToken(doc.content, chunkSize, overlap)?.map(
+            (content) => {
+              return {
+                ...doc,
+                content,
+              };
+            }
+          );
+        } else {
+          return doc;
+        }
+      })
+      .flat();
+
+    // embedd chunks
+    let embeddings = await Promise.all(
+      chunks.map((chunk: any) => embed(chunk.content))
+    );
+
+    chunks = chunks.map((chunk: any, index: number) => {
+      return {
+        ...chunk,
+        embedding: embeddings[index].data[0].embedding,
+        id: uuidv4(),
+      };
+    });
+
+    // delete prev doc
+    supabaseClient
+      .from("documents")
+      .delete()
+      .eq("id", document.id)
+      .then(({ error }) => {
+        if (error) {
+          console.log(error);
+        }
+      });
+
+    setDocuments((documents) =>
+      documents.filter((doc) => doc.id !== document.id)
+    );
+
+    // add new chunks
+
+    supabaseClient
+      .from("documents")
+
+      .insert(chunks)
+      .select("*")
+      .then(({ data, error }) => {
+        if (error) {
+          console.log(error);
+        }
+      });
+
+    setDocuments((documents) => [
+      ...documents,
+      ...(chunks as DocumentInterface[]),
+    ]);
+  }
+
+  function DocumentView({ document }: { document: DocumentInterface | null }) {
+    const [doc, setDoc] = useState<string>(document!.content);
+
+    return (
+      <Stack>
+        <Textarea
+          autosize
+          maxRows={15}
+          placeholder="Document content"
+          label="Document contents"
+          value={doc}
+          onChange={(event) => setDoc(event.target.value)}
+        />
+        <Button
+          onClick={() => {
+            updateDocument({
+              ...document,
+              content: doc,
+            })
+              .then(() => {
+                close();
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          }}
+        >
+          Save changes
+        </Button>
+      </Stack>
+    );
+  }
+
+  const [selectedDocument, setSelectedDocument] =
+    useState<DocumentInterface | null>(null);
   return (
     <Stack w="100%">
+      <Modal fullScreen opened={opened} onClose={close} title="Edit document">
+        <DocumentView document={selectedDocument} />
+      </Modal>
       <TextInput
         label="Component name"
         placeholder="New document retrieval component"
@@ -240,7 +352,7 @@ export default function Document({
         min={0}
         step={1}
         value={numberDocuments}
-        onChange={setNumberDocuments}
+        onChange={setNumberDocuments as (value: number | "") => void}
       />
       <NumberInput
         label="Similarity threshold"
@@ -249,7 +361,7 @@ export default function Document({
         min={0.1}
         step={1.0}
         value={similarityThreshold}
-        onChange={setSimilarityThreshold}
+        onChange={setSimilarityThreshold as (value: number | "") => void}
       />
       <MentionsEditor
         label="Search query"
@@ -267,6 +379,9 @@ export default function Document({
         <div style={gridStyle} className="ag-theme-alpine">
           <AgGridReact
             ref={gridRef}
+            onCellClicked={(event) => {
+              handleCellClicked(event);
+            }}
             rowData={documents}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
@@ -322,18 +437,16 @@ const FileUpload = ({
       const formData = new FormData();
       // append each file to formData
       selectedFiles.forEach((file) => {
-        console.log({ file });
         formData.append("files", file);
         formData.append("filenames", file.name);
       });
 
-      const response = await fetch("http://localhost:5000/upload", {
+      const response = await fetch("http://137.184.120.81/upload", {
         method: "POST",
         body: formData,
       });
 
       const { files } = await response.json();
-      console.log({ files });
 
       // we have all the files data
 
@@ -368,8 +481,6 @@ const FileUpload = ({
         )
       );
 
-      console.log({ embeddings });
-
       chunks = chunks.map(
         (
           chunk: {
@@ -386,8 +497,6 @@ const FileUpload = ({
           };
         }
       );
-
-      console.log({ chunks });
 
       // push to supabase
       supabaseClient
@@ -428,8 +537,8 @@ const FileUpload = ({
   );
 };
 
-function Value({ file }: { file: File }) {
-  let fileExtension = file.name.split(".").pop();
+function Value({ file }: { file: File | null }) {
+  let fileExtension = file?.name.split(".").pop();
 
   let Icon = () => {
     switch (fileExtension) {
@@ -483,7 +592,7 @@ function Value({ file }: { file: File }) {
           display: "inline-block",
         }}
       >
-        {file.name}
+        {file?.name}
       </span>
     </Center>
   );

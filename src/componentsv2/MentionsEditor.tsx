@@ -59,7 +59,7 @@ export default function MentionsEditor({
             id={`mention_integration${id}`}
             ref={object}
             placeholder="Type @ to use output from other components"
-            actionBegin={actionBegineHandler.bind(this)}
+            actionBegin={actionBegineHandler}
             value={value}
           >
             <Inject
@@ -74,12 +74,15 @@ export default function MentionsEditor({
         suggestionCount={8}
         showMentionChar={false}
         allowSpaces={true}
-        dataSource={data}
+        dataSource={data.map((mention) => ({
+          id: mention.id,
+          name: mention.name,
+        }))}
         fields={fieldsData}
         popupWidth="250px"
         popupHeight="200px"
         itemTemplate={itemTemplate}
-        displayTemplate={displayTemplate.bind(this)}
+        displayTemplate={displayTemplate}
       ></MentionComponent>
     </div>
   );

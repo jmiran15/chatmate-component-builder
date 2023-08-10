@@ -8,9 +8,11 @@ import {
   UnstyledButton,
   Group,
   ActionIcon,
+  Card,
+  Center,
   TextInput,
+  MediaQuery,
 } from "@mantine/core";
-import { useHover } from "@mantine/hooks";
 import { Outlet, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { UUID } from "../../../../reducers/graph-reducer";
@@ -53,8 +55,6 @@ export default function ChatLayout() {
       });
   }, [userId, project]);
 
-  console.log({ chats });
-
   function handleNewChat() {
     // create a new chat, set name to untitled chat, user to userId
 
@@ -80,30 +80,51 @@ export default function ChatLayout() {
 
   return (
     <>
-      {isChatSelected ? <Outlet /> : <Text>no chat selected</Text>}
-      <Aside
-        p="md"
-        width={{ sm: 200, lg: 300 }}
-        style={{
-          overflowY: "scroll",
-        }}
-      >
-        <Stack spacing="xs">
-          <Button onClick={handleNewChat}>Create a new chat</Button>
-          {chats.length > 0 ? (
-            chats.map((chat) => (
-              <Link
-                key={chat.id}
-                chat={chat}
-                setChats={setChats}
-                projectid={projectid}
-              />
-            ))
-          ) : (
-            <p>no chats yet</p>
-          )}
-        </Stack>
-      </Aside>
+      {isChatSelected ? (
+        <Outlet />
+      ) : (
+        <Card
+          withBorder
+          radius="lg"
+          padding="lg"
+          style={{
+            width: "100%",
+            height: "80vh",
+          }}
+        >
+          <Center w="100%" h="100%">
+            <Stack>
+              <Text>Create a new chat or select a chat</Text>
+              <Button onClick={handleNewChat}>Create a new chat</Button>
+            </Stack>
+          </Center>
+        </Card>
+      )}
+      <MediaQuery smallerThan="md" styles={{ display: "none" }}>
+        <Aside
+          p="md"
+          width={{ sm: 200, lg: 300 }}
+          style={{
+            overflowY: "scroll",
+          }}
+        >
+          <Stack spacing="xs">
+            <Button onClick={handleNewChat}>Create a new chat</Button>
+            {chats.length > 0 ? (
+              chats.map((chat) => (
+                <Link
+                  key={chat.id}
+                  chat={chat}
+                  setChats={setChats}
+                  projectid={projectid}
+                />
+              ))
+            ) : (
+              <p>no chats yet</p>
+            )}
+          </Stack>
+        </Aside>
+      </MediaQuery>
     </>
   );
 }
