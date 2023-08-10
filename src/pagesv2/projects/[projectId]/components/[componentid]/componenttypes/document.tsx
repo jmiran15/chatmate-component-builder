@@ -512,6 +512,7 @@ const FileUpload = ({
               ...documents,
               ...(data as DocumentInterface[]),
             ]);
+            setSelectedFiles([]);
           }
         });
 

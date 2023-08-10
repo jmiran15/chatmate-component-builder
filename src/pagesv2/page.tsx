@@ -16,31 +16,20 @@ import {
 } from "@mantine/core";
 
 const useStyles = createStyles((theme) => ({
-  wrapper: {
-    position: "relative",
-    boxSizing: "border-box",
-    backgroundColor:
-      theme.colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
-  },
-
-  inner: {
-    position: "relative",
-    paddingTop: rem(200),
-    paddingBottom: rem(120),
-
-    [theme.fn.smallerThan("sm")]: {
-      paddingBottom: rem(80),
-      paddingTop: rem(80),
+  root: {
+    [theme.fn.smallerThan("lg")]: {
+      paddingLeft: theme.spacing.md,
+      paddingRight: theme.spacing.md,
     },
+    paddingLeft: rem(5),
+    paddingRight: rem(5),
   },
-
-  description: {
-    marginTop: theme.spacing.xl,
-    fontSize: rem(24),
-
-    [theme.fn.smallerThan("sm")]: {
-      fontSize: rem(18),
+  grid: {
+    [theme.fn.smallerThan("lg")]: {
+      height: "100%",
+      paddingTop: rem(50),
     },
+    height: "80vh",
   },
 }));
 
@@ -56,9 +45,9 @@ export default function Landing() {
   }, [isSignedIn]);
 
   return (
-    <Grid w="100vw" align="flex-start" px="100px">
+    <Grid w="100vw" align="flex-start" className={classes.root}>
       <Grid.Col lg={6} md={12}>
-        <Stack h="80vh" justify="center" align="flex-start">
+        <Stack className={classes.grid} justify="center" align="flex-start">
           <Title order={1}>
             Create chatbots with multiple chat and document components
           </Title>
@@ -77,7 +66,7 @@ export default function Landing() {
         </Stack>
       </Grid.Col>
       <Grid.Col lg={6} md={12}>
-        <Flex h="80vh" justify="center" align="flex-start">
+        <Flex className={classes.grid} justify="center" align="flex-start">
           <iframe
             src="https://www.loom.com/embed/9c416dbfed384151af858a7d8659de8c?sid=d4c5758c-fcfe-4434-b213-ca802a53b4a5"
             title="checkmate.dev demo"

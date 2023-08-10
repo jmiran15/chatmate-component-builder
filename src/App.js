@@ -11,6 +11,7 @@ import "../node_modules/@syncfusion/ej2-navigations/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-popups/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-react-richtexteditor/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-react-dropdowns/styles/bootstrap5.css";
+import { Analytics } from "@vercel/analytics/react";
 import { useNavigate } from "react-router-dom";
 import { registerLicense } from "@syncfusion/ej2-base";
 import { ClerkProvider, SignIn, SignUp } from "@clerk/clerk-react";
@@ -132,6 +133,7 @@ export default function App() {
           <GraphProvider>
             <BrowserRouter>
               <ClerkProviderWithRoutes />
+              <Analytics />
             </BrowserRouter>
           </GraphProvider>
         </ProjectProvider>
