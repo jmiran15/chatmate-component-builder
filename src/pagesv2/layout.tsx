@@ -9,6 +9,8 @@ import {
 } from "@tabler/icons-react";
 import {
   AppShell,
+  Aside,
+  Stack,
   Header,
   Group,
   Burger,
@@ -39,7 +41,7 @@ export default function Shell() {
   return (
     <AppShell
       navbarOffsetBreakpoint="sm"
-      asideOffsetBreakpoint="sm"
+      asideOffsetBreakpoint="xl"
       header={
         <Header height={{ base: 50, md: 70 }} p="md">
           <div
@@ -118,6 +120,34 @@ export default function Shell() {
               : theme.colors.gray[0],
         },
       })}
+      aside={
+        <Aside
+          p="md"
+          hiddenBreakpoint="xl"
+          hidden={!opened}
+          width={{ sm: 200, lg: 300 }}
+        >
+          <Stack>
+            <Button
+              variant="default"
+              onClick={() => {
+                if (opened) setOpened(false);
+                navigate("sign-up");
+              }}
+            >
+              Sign up
+            </Button>
+            <Button
+              onClick={() => {
+                if (opened) setOpened(false);
+                navigate("sign-in");
+              }}
+            >
+              Sign in
+            </Button>
+          </Stack>
+        </Aside>
+      }
     >
       <Center>
         <Outlet />

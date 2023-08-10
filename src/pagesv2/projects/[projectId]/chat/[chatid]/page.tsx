@@ -57,7 +57,6 @@ export interface Message {
 
 export default function Chat() {
   const { dependencyOrder, state } = useGraph();
-  const chatBottomRef = useRef<HTMLDivElement>(null);
   const { chatid } = useParams();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -66,11 +65,6 @@ export default function Chat() {
     dependencyOrder[dependencyOrder.length - 1][
       dependencyOrder[dependencyOrder.length - 1].length - 1
     ].id;
-
-  useEffect(() => {
-    // scroll down
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   useEffect(() => {
     // fetch messages from db
@@ -339,21 +333,28 @@ export default function Chat() {
 
   return (
     <Stack w="100%" align="center" justify="space-between" h="80vh">
-      <Checkbox
+      <Stack
+        spacing="xs"
+        w="100%"
         style={{
-          alignSelf: "flex-start",
+          overflowY: "scroll",
         }}
-        label="verbose"
-        checked={isVerbose}
-        onChange={(e) => setIsVerbose(e.currentTarget.checked)}
-      />
-      <Messages
-        messages={messages}
-        state={state}
-        isVerbose={isVerbose}
-        RESPONSE_UUID={RESPONSE_UUID}
-      />
-      <div id="chat-bottom" ref={chatBottomRef} />
+      >
+        <Checkbox
+          style={{
+            alignSelf: "flex-start",
+          }}
+          label="verbose"
+          checked={isVerbose}
+          onChange={(e) => setIsVerbose(e.currentTarget.checked)}
+        />
+        <Messages
+          messages={messages}
+          state={state}
+          isVerbose={isVerbose}
+          RESPONSE_UUID={RESPONSE_UUID}
+        />
+      </Stack>
 
       <ChatInput query={query} setQuery={setQuery} sendQuery={sendQuery} />
     </Stack>

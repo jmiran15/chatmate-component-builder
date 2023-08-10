@@ -12,6 +12,7 @@ import {
   Center,
   TextInput,
   MediaQuery,
+  Flex,
 } from "@mantine/core";
 import { Outlet, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
@@ -79,7 +80,7 @@ export default function ChatLayout() {
   }
 
   return (
-    <>
+    <Flex direction="row" w="100%" align="flex-start">
       {isChatSelected ? (
         <Outlet />
       ) : (
@@ -101,31 +102,30 @@ export default function ChatLayout() {
         </Card>
       )}
       <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-        <Aside
-          p="md"
-          width={{ sm: 200, lg: 300 }}
+        <Stack
+          px="md"
+          w="300px"
+          spacing="xs"
           style={{
             overflowY: "scroll",
           }}
         >
-          <Stack spacing="xs">
-            <Button onClick={handleNewChat}>Create a new chat</Button>
-            {chats.length > 0 ? (
-              chats.map((chat) => (
-                <Link
-                  key={chat.id}
-                  chat={chat}
-                  setChats={setChats}
-                  projectid={projectid}
-                />
-              ))
-            ) : (
-              <p>no chats yet</p>
-            )}
-          </Stack>
-        </Aside>
+          <Button onClick={handleNewChat}>Create a new chat</Button>
+          {chats.length > 0 ? (
+            chats.map((chat) => (
+              <Link
+                key={chat.id}
+                chat={chat}
+                setChats={setChats}
+                projectid={projectid}
+              />
+            ))
+          ) : (
+            <p>no chats yet</p>
+          )}
+        </Stack>
       </MediaQuery>
-    </>
+    </Flex>
   );
 }
 
