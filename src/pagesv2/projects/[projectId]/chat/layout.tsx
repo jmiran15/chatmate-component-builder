@@ -46,7 +46,7 @@ export default function ChatLayout() {
       .from("chats")
       .select("*")
       .eq("user", userId)
-      .eq("project", project)
+      .eq("project", projectid)
       .then(({ data, error }) => {
         if (error) {
           console.error(error);
@@ -54,7 +54,7 @@ export default function ChatLayout() {
           setChats(data);
         }
       });
-  }, [userId, project]);
+  }, [userId, projectid]);
 
   function handleNewChat() {
     // create a new chat, set name to untitled chat, user to userId
@@ -63,7 +63,7 @@ export default function ChatLayout() {
       id: uuidv4(),
       name: "Untitled chat",
       user: userId,
-      project: project,
+      project: projectid,
     };
     supabaseClient
       .from("chats")

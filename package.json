@@ -22,6 +22,7 @@
     "ai": "^2.1.32",
     "cors": "^2.8.5",
     "cors-anywhere": "^0.4.4",
+    "driver.js": "^1.2.1",
     "express": "^4.18.2",
     "fs": "^0.0.1-security",
     "http": "^0.0.1-security",

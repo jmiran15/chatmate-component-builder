@@ -16,6 +16,7 @@ export default function Project() {
     // this is the highest point in the app where we know what project we are in
     // for the user use case this would be when they select a project OR based on the multitenanted domain
     setGlobalProject(projectid);
+    console.log("set the project");
   }, [projectid, setGlobalProject]);
 
   return <Outlet />;

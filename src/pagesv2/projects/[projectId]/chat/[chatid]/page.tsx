@@ -8,8 +8,8 @@ import {
   Checkbox,
 } from "@mantine/core";
 import { OpenAIStream } from "ai";
-
-import React from "react";
+import { ProjectContext } from "../../../../../contextv2/project";
+import React, { useContext } from "react";
 import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -61,10 +61,14 @@ export default function Chat() {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isVerbose, setIsVerbose] = useState(false);
-  const RESPONSE_UUID =
-    dependencyOrder[dependencyOrder.length - 1][
-      dependencyOrder[dependencyOrder.length - 1].length - 1
-    ].id;
+
+  let RESPONSE_UUID: any = undefined;
+
+  if (dependencyOrder.length !== 0)
+    RESPONSE_UUID =
+      dependencyOrder[dependencyOrder.length - 1][
+        dependencyOrder[dependencyOrder.length - 1].length - 1
+      ].id;
 
   useEffect(() => {
     // fetch messages from db
