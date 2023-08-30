@@ -32,7 +32,7 @@ const Projects = Loadable(
   lazy(() => import("./pagesv2/projects/Projects.tsx"))
 );
 const Project = Loadable(
-  lazy(() => import("./pagesv2/projects/[projectId]/layout.tsx"))
+  lazy(() => import("./pagesv2/projects/[projectId]/Project.tsx"))
 );
 const ChatLayout = Loadable(
   lazy(() => import("./pagesv2/projects/[projectId]/chat/layout.tsx"))
@@ -41,7 +41,7 @@ const Chat = Loadable(
   lazy(() => import("./pagesv2/projects/[projectId]/chat/[chatid]/page.tsx"))
 );
 const Components = Loadable(
-  lazy(() => import("./pagesv2/projects/[projectId]/components/page.tsx"))
+  lazy(() => import("./pagesv2/projects/[projectId]/components/Components.tsx"))
 );
 const Component = Loadable(
   lazy(() =>
@@ -51,6 +51,12 @@ const Component = Loadable(
 const Settings = Loadable(
   lazy(() => import("./pagesv2/projects/[projectId]/settings/page.tsx"))
 );
+
+const Publish = Loadable(
+  lazy(() => import("./pagesv2/projects/[projectId]/Publish.tsx"))
+);
+
+const Chatbot = Loadable(lazy(() => import("./pagesv2/Chatbot.tsx")));
 
 if (!process.env.REACT_APP_CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
@@ -214,6 +220,7 @@ function ClerkProviderWithRoutes() {
   return (
     <ClerkProvider publishableKey={clerkPubKey} navigate={(to) => navigate(to)}>
       <Routes>
+        <Route path="/b/*" element={<Chatbot />} />
         <Route path="/" element={<Shell />}>
           <Route index element={<Landing />} />
           <Route path="/examples" element={<div>Examples</div>} />
@@ -259,10 +266,10 @@ function ClerkProviderWithRoutes() {
                 <Route path=":chatid" element={<Chat />} />
               </Route>
               <Route path="components" element={<Components />} />
-              <Route path="components/:componentid" element={<Component />} />
+              <Route path="components/:componentId" element={<Component />} />
               <Route path="analytics" element={<div>Analytics</div>} />
               <Route path="versioning" element={<div>Versioning</div>} />
-              <Route path="publish" element={<div>Publish</div>} />
+              <Route path="publish" element={<Publish />} />
               <Route path="settings" element={<Settings />} />
             </Route>
           </Route>

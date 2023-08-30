@@ -102,7 +102,7 @@ export default function Components() {
       <Fab
         icon={<IconPlus />}
         mainButtonStyles={{
-          backgroundColor: theme.colors.blue[6],
+          backgroundColor: theme.colors.blue[9],
         }}
         event="click"
         alwaysShowTitle={true}
@@ -111,7 +111,7 @@ export default function Components() {
           text="Add a chat component"
           onClick={handleAddChatComponent}
           style={{
-            backgroundColor: theme.colors.blue[6],
+            backgroundColor: theme.colors.blue[9],
           }}
         >
           <IconMessage />
@@ -120,7 +120,7 @@ export default function Components() {
           text="Add a document retrieval component"
           onClick={handleAddDocumentComponent}
           style={{
-            backgroundColor: theme.colors.blue[6],
+            backgroundColor: theme.colors.blue[9],
           }}
         >
           <IconFileText />

@@ -1,5 +1,3 @@
-// we have the sidebar if size is large/ otherwise we have the burger menu
-
 import React from "react";
 import { useContext, useEffect } from "react";
 import { NavLink, Outlet, useParams } from "react-router-dom";
@@ -9,7 +7,7 @@ import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
 
 export default function Project() {
   const { projectId } = useParams();
-  const { setProject: setGlobalProject } =
+  const { project, setProject: setGlobalProject } =
     useContext<ProjectContextType>(ProjectContext);
 
   // not necessary since we arent showing the project name (show project name as nav section)
@@ -23,15 +21,16 @@ export default function Project() {
   return (
     <div style={{ display: "flex", height: "100%", minHeight: "400px" }}>
       <Sidebar>
+        <div>{project}</div>
         <Menu>
           <MenuItem component={<NavLink to="chat" />}>Chat</MenuItem>
           <MenuItem component={<NavLink to="components" />}>
             Components
           </MenuItem>
-          <MenuItem component={<NavLink to="analytics" />}>Analytics</MenuItem>
-          <MenuItem component={<NavLink to="versioning" />}>
+          {/* <MenuItem component={<NavLink to="analytics" />}>Analytics</MenuItem> */}
+          {/* <MenuItem component={<NavLink to="versioning" />}>
             Versioning
-          </MenuItem>
+          </MenuItem> */}
           <MenuItem component={<NavLink to="publish" />}>Publish</MenuItem>
           <MenuItem component={<NavLink to="settings" />}>Settings</MenuItem>
         </Menu>

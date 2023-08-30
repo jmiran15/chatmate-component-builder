@@ -80,8 +80,7 @@ export default function Document({
       };
     }),
   ];
-  const { componentid, projectId } = useParams();
-  let componentId = component.id;
+  const { componentId, projectId } = useParams();
   const navigate = useNavigate();
   const [name, setName] = useState<string>(component.name);
   const [numberDocuments, setNumberDocuments] = useState<number>(
@@ -189,7 +188,7 @@ export default function Document({
     supabaseClient
       .from("document_components")
       .delete()
-      .eq("id", componentid)
+      .eq("id", componentId)
       .then(({ error }) => {
         if (error) {
           console.log(error);
@@ -198,7 +197,7 @@ export default function Document({
       });
     dispatch({
       type: DELETE_NODE,
-      payload: componentid as UUID,
+      payload: componentId as UUID,
     });
     navigate(`/projects/${projectId}/components`);
   }

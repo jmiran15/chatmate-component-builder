@@ -10,15 +10,15 @@ import Document from "./componenttypes/document";
 import { useParams } from "react-router-dom";
 
 export default function Component() {
-  const { componentid } = useParams();
+  const { componentId } = useParams();
   const { state } = useGraph();
 
   return (
     <>
-      {state[componentid as UUID].type === CHAT_TYPE ? (
-        <Chat component={state[componentid as UUID] as ChatInterface} />
+      {state[componentId as UUID].type === CHAT_TYPE ? (
+        <Chat component={state[componentId as UUID] as ChatInterface} />
       ) : (
-        <Document component={state[componentid as UUID] as DocumentInterface} />
+        <Document component={state[componentId as UUID] as DocumentInterface} />
       )}
     </>
   );
