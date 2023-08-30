@@ -2,12 +2,13 @@
 
 import React from "react";
 import { useContext, useEffect } from "react";
-import { Outlet, useParams } from "react-router-dom";
+import { NavLink, Outlet, useParams } from "react-router-dom";
 import { ProjectContext } from "../../../contextv2/project";
 import { Project as ProjectContextType } from "../../../contextv2/project";
+import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
 
 export default function Project() {
-  const { projectid } = useParams();
+  const { projectId } = useParams();
   const { setProject: setGlobalProject } =
     useContext<ProjectContextType>(ProjectContext);
 
@@ -15,9 +16,27 @@ export default function Project() {
   useEffect(() => {
     // this is the highest point in the app where we know what project we are in
     // for the user use case this would be when they select a project OR based on the multitenanted domain
-    setGlobalProject(projectid);
+    setGlobalProject(projectId);
     console.log("set the project");
-  }, [projectid, setGlobalProject]);
+  }, [projectId, setGlobalProject]);
 
-  return <Outlet />;
+  return (
+    <div style={{ display: "flex", height: "100%", minHeight: "400px" }}>
+      <Sidebar>
+        <Menu>
+          <MenuItem component={<NavLink to="chat" />}>Chat</MenuItem>
+          <MenuItem component={<NavLink to="components" />}>
+            Components
+          </MenuItem>
+          <MenuItem component={<NavLink to="analytics" />}>Analytics</MenuItem>
+          <MenuItem component={<NavLink to="versioning" />}>
+            Versioning
+          </MenuItem>
+          <MenuItem component={<NavLink to="publish" />}>Publish</MenuItem>
+          <MenuItem component={<NavLink to="settings" />}>Settings</MenuItem>
+        </Menu>
+      </Sidebar>
+      <Outlet />
+    </div>
+  );
 }

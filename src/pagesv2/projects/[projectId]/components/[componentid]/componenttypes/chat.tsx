@@ -43,7 +43,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
       };
     }),
   ];
-  const { componentid, projectid } = useParams();
+  const { componentId, projectId } = useParams();
   const [name, setName] = useState<string>(component.name);
   const [model, setModel] = useState<string>(component.model);
   const [temperature, setTemperature] = useState<number>(component.temperature);
@@ -84,10 +84,10 @@ export default function Chat({ component }: { component: ChatInterface }) {
   // when we save, we convert the text with mentions back to our format
 
   useEffect(() => {
-    if (componentid !== component.id) {
+    if (componentId !== component.id) {
       throw new Error("component id mismatch");
     }
-  }, [componentid, component.id]);
+  }, [componentId, component.id]);
 
   console.log({
     component_render: component,
@@ -106,7 +106,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
     supabaseClient
       .from("chat_components")
       .update(component)
-      .eq("id", componentid)
+      .eq("id", componentId)
       .select()
       .then(({ data, error }) => {
         if (error) {
@@ -119,7 +119,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
     dispatch({
       type: EDIT_NODE,
       payload: {
-        id: componentid as UUID,
+        id: componentId as UUID,
         type: CHAT_TYPE,
         ...component,
       },
@@ -130,7 +130,7 @@ export default function Chat({ component }: { component: ChatInterface }) {
     supabaseClient
       .from("chat_components")
       .delete()
-      .eq("id", componentid)
+      .eq("id", componentId)
       .then(({ error }) => {
         if (error) {
           console.log(error);
@@ -139,9 +139,9 @@ export default function Chat({ component }: { component: ChatInterface }) {
       });
     dispatch({
       type: DELETE_NODE,
-      payload: componentid as UUID,
+      payload: componentId as UUID,
     });
-    navigate(`/projects/${projectid}/components`);
+    navigate(`/projects/${projectId}/components`);
   }
 
   return (

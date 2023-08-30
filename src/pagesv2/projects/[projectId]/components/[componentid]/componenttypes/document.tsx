@@ -80,7 +80,7 @@ export default function Document({
       };
     }),
   ];
-  const { componentid, projectid } = useParams();
+  const { componentid, projectId } = useParams();
   let componentId = component.id;
   const navigate = useNavigate();
   const [name, setName] = useState<string>(component.name);
@@ -200,7 +200,7 @@ export default function Document({
       type: DELETE_NODE,
       payload: componentid as UUID,
     });
-    navigate(`/projects/${projectid}/components`);
+    navigate(`/projects/${projectId}/components`);
   }
 
   function handleDeleteDocuments() {

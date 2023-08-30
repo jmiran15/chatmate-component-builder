@@ -12,16 +12,25 @@ import "../node_modules/@syncfusion/ej2-popups/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-react-richtexteditor/styles/bootstrap5.css";
 import "../node_modules/@syncfusion/ej2-react-dropdowns/styles/bootstrap5.css";
 import { Analytics } from "@vercel/analytics/react";
-import { useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { registerLicense } from "@syncfusion/ej2-base";
-import { ClerkProvider, SignIn, SignUp } from "@clerk/clerk-react";
+import {
+  ClerkProvider,
+  RedirectToSignIn,
+  SignIn,
+  SignUp,
+  SignedIn,
+  SignedOut,
+} from "@clerk/clerk-react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { GraphProvider } from "./contextv2/graph.tsx";
 import { ProjectProvider } from "./contextv2/project.tsx";
-import Protected from "./pagesv2/protected.jsx";
-const Shell = Loadable(lazy(() => import("./pagesv2/layout.tsx")));
-const Landing = Loadable(lazy(() => import("./pagesv2/page.tsx")));
-const Projects = Loadable(lazy(() => import("./pagesv2/projects/page.tsx")));
+const Shell = Loadable(lazy(() => import("./layouts/Shell.tsx")));
+
+const Landing = Loadable(lazy(() => import("./pagesv2/Landing.tsx")));
+const Projects = Loadable(
+  lazy(() => import("./pagesv2/projects/Projects.tsx"))
+);
 const Project = Loadable(
   lazy(() => import("./pagesv2/projects/[projectId]/layout.tsx"))
 );
@@ -66,6 +75,139 @@ if (!process.env.REACT_APP_OPENAI) {
 const clerkPubKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
 registerLicense(process.env.REACT_APP_SYNCFUSION_LICENSE_KEY);
 
+// const router = createBrowserRouter([
+//   {
+//     element: <ClerkProviderWithNavigate />,
+//     children: [
+//       {
+//         path: "/",
+//         element: <Shell />,
+//         children: [
+//           {
+//             index: true,
+//             element: <div>Landing</div>,
+//           },
+//           {
+//             path: "examples",
+//             element: <div>Examples</div>,
+//             children: [
+//               {
+//                 path: ":exampleId",
+//                 element: <div>Example</div>,
+//               },
+//             ],
+//           },
+//           {
+//             path: "discover",
+//             element: <div>Discover</div>,
+//           },
+//           {
+//             path: "sign-in/*",
+//             element: (
+//               <SignIn
+//                 routing="path"
+//                 path="/sign-in"
+//                 signUpUrl="/sign-up"
+//                 redirectUrl="/projects"
+//               />
+//             ),
+//           },
+//           {
+//             path: "sign-up/*",
+//             element: (
+//               <SignUp
+//                 routing="path"
+//                 path="/sign-up"
+//                 signInUrl="/sign-in"
+//                 redirectUrl="/projects"
+//               />
+//             ),
+//           },
+//           {
+//             element: (
+//               <>
+//                 <SignedIn>
+//                   <Outlet />
+//                 </SignedIn>
+//                 <SignedOut>
+//                   <RedirectToSignIn />
+//                 </SignedOut>
+//               </>
+//             ),
+//             children: [
+//               {
+//                 path: "/projects/:userId",
+//                 element: <Projects />,
+//                 loader: async ({ params }) => {
+//                   return await supabaseClient
+//                     .from("projects")
+//                     .select("*")
+//                     .eq("user", params.userId)
+//                     .order("created_at", { ascending: false })
+//                     .then(({ data, error }) => {
+//                       if (error) {
+//                         throw error;
+//                       }
+//                       if (data) {
+//                         return data;
+//                       }
+//                     });
+//                 },
+//               },
+//               {
+//                 path: "projects/:userId/:projectId/:version?",
+//                 element: <div>Project</div>,
+//                 children: [
+//                   {
+//                     index: true,
+//                     element: <div>Index</div>,
+//                   },
+//                   {
+//                     path: "chats",
+//                     element: <div>Chats</div>,
+//                     children: [
+//                       {
+//                         path: ":chatId",
+//                         element: <div>Chat</div>,
+//                       },
+//                     ],
+//                   },
+//                   {
+//                     path: "components",
+//                     element: <div>Components</div>,
+//                     children: [
+//                       {
+//                         path: ":componentId",
+//                         element: <div>Component</div>,
+//                       },
+//                     ],
+//                   },
+//                   {
+//                     path: "analytics",
+//                     element: <div>Analytics</div>,
+//                   },
+//                   {
+//                     path: "versioning",
+//                     element: <div>Versioning</div>,
+//                   },
+//                   {
+//                     path: "publish",
+//                     element: <div>Publish</div>,
+//                   },
+//                   {
+//                     path: "settings",
+//                     element: <div>Settings</div>,
+//                   },
+//                 ],
+//               },
+//             ],
+//           },
+//         ],
+//       },
+//     ],
+//   },
+// ]);
+
 function ClerkProviderWithRoutes() {
   const navigate = useNavigate();
 
@@ -73,19 +215,9 @@ function ClerkProviderWithRoutes() {
     <ClerkProvider publishableKey={clerkPubKey} navigate={(to) => navigate(to)}>
       <Routes>
         <Route path="/" element={<Shell />}>
-          <Route path="/" element={<Landing />} />
-          <Route path="/" element={<Protected />}>
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/:projectid" element={<Project />}>
-              <Route path="chat" element={<ChatLayout />}>
-                <Route path=":chatid" element={<Chat />} />
-              </Route>
-              <Route path="components" element={<Components />} />
-              <Route path="components/:componentid" element={<Component />} />
-              <Route path="api" element={<div>api</div>} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-          </Route>
+          <Route index element={<Landing />} />
+          <Route path="/examples" element={<div>Examples</div>} />
+          <Route path="/discover" element={<div>Discover</div>} />
           <Route
             path="/sign-in/*"
             element={
@@ -96,7 +228,7 @@ function ClerkProviderWithRoutes() {
                 redirectUrl="/projects"
               />
             }
-          />
+          ></Route>
           <Route
             path="/sign-up/*"
             element={
@@ -107,7 +239,33 @@ function ClerkProviderWithRoutes() {
                 redirectUrl="/projects"
               />
             }
-          />
+          ></Route>
+          <Route
+            element={
+              <>
+                <SignedIn>
+                  <Outlet />
+                </SignedIn>
+                <SignedOut>
+                  <RedirectToSignIn />
+                </SignedOut>
+              </>
+            }
+          >
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:projectId/:version?" element={<Project />}>
+              <Route index element={<div>Index</div>} />
+              <Route path="chat" element={<ChatLayout />}>
+                <Route path=":chatid" element={<Chat />} />
+              </Route>
+              <Route path="components" element={<Components />} />
+              <Route path="components/:componentid" element={<Component />} />
+              <Route path="analytics" element={<div>Analytics</div>} />
+              <Route path="versioning" element={<div>Versioning</div>} />
+              <Route path="publish" element={<div>Publish</div>} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
+          </Route>
         </Route>
       </Routes>
     </ClerkProvider>

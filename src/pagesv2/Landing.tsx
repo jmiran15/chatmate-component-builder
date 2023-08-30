@@ -35,14 +35,7 @@ const useStyles = createStyles((theme) => ({
 
 export default function Landing() {
   const { classes } = useStyles();
-  const { isSignedIn } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (isSignedIn) {
-      navigate("/projects");
-    }
-  }, [isSignedIn]);
 
   return (
     <Grid w="100vw" align="flex-start" className={classes.root}>

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabaseClient } from "../../../../utilsv2/supabase";
 
 export default function Settings() {
-  const { projectid } = useParams<{ projectid: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const [name, setName] = useState<string>("");
   const navigate = useNavigate();
 
@@ -12,17 +12,17 @@ export default function Settings() {
     supabaseClient
       .from("projects")
       .select("name")
-      .eq("id", projectid)
+      .eq("id", projectId)
       .then(({ data }) => {
         setName(data![0].name);
       });
-  }, [projectid]);
+  }, [projectId]);
 
   function handleSave() {
     supabaseClient
       .from("projects")
       .update({ name })
-      .eq("id", projectid)
+      .eq("id", projectId)
       .select("name")
       .then(({ data }) => setName(data![0].name));
   }
@@ -31,7 +31,7 @@ export default function Settings() {
     supabaseClient
       .from("projects")
       .delete()
-      .eq("id", projectid)
+      .eq("id", projectId)
       .then(({ error }) => console.log("delete: ", { error }));
     navigate("/projects");
   }

@@ -38,7 +38,7 @@ export default function ChatLayout() {
   const [chats, setChats] = useState<Chat[]>([]);
   const { project } = useContext(ProjectContext);
   const { userId } = useAuth();
-  const { projectid } = useParams();
+  const { projectId } = useParams();
 
   useEffect(() => {
     // fetch the users chats
@@ -46,7 +46,7 @@ export default function ChatLayout() {
       .from("chats")
       .select("*")
       .eq("user", userId)
-      .eq("project", projectid)
+      .eq("project", projectId)
       .then(({ data, error }) => {
         if (error) {
           console.error(error);
@@ -54,7 +54,7 @@ export default function ChatLayout() {
           setChats(data);
         }
       });
-  }, [userId, projectid]);
+  }, [userId, projectId]);
 
   function handleNewChat() {
     // create a new chat, set name to untitled chat, user to userId
@@ -63,7 +63,7 @@ export default function ChatLayout() {
       id: uuidv4(),
       name: "Untitled chat",
       user: userId,
-      project: projectid,
+      project: projectId,
     };
     supabaseClient
       .from("chats")
@@ -117,7 +117,7 @@ export default function ChatLayout() {
                 key={chat.id}
                 chat={chat}
                 setChats={setChats}
-                projectid={projectid}
+                projectId={projectId}
               />
             ))
           ) : (
@@ -132,11 +132,11 @@ export default function ChatLayout() {
 function Link({
   chat,
   setChats,
-  projectid,
+  projectId,
 }: {
   chat: Chat;
   setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
-  projectid: UUID;
+  projectId: UUID;
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -178,7 +178,7 @@ function Link({
           console.error(error);
         } else {
           setChats((prev) => prev.filter((p) => p.id !== chat.id));
-          navigate(`/projects/${projectid}/chat`);
+          navigate(`/projects/${projectId}/chat`);
         }
       });
   }

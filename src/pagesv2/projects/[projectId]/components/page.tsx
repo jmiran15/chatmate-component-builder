@@ -30,15 +30,15 @@ const useStyles = createStyles((theme) => ({
 export default function Components() {
   const theme = useMantineTheme();
   const { classes } = useStyles();
-  const { projectid } = useParams();
+  const { projectId } = useParams();
   const { project } = useContext(ProjectContext);
   const { dependencyOrder, dispatch } = useGraph();
 
   useEffect(() => {
-    if (project && project !== projectid) {
+    if (project && project !== projectId) {
       throw new Error("project id mismatch");
     }
-  }, [project, projectid]);
+  }, [project, projectId]);
 
   function handleAddChatComponent() {
     let id = uuidv4();
