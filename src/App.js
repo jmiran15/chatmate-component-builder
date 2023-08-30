@@ -1,4 +1,9 @@
-import { ColorSchemeProvider, MantineProvider } from "@mantine/core";
+import {
+  ColorSchemeProvider,
+  MantineProvider,
+  Center,
+  Text,
+} from "@mantine/core";
 import Loadable from "./componentsv2/Loadable.tsx";
 import { lazy, useState } from "react";
 import "../node_modules/@syncfusion/ej2-base/styles/bootstrap5.css";
@@ -263,7 +268,19 @@ function ClerkProviderWithRoutes() {
           >
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:projectId/:version?" element={<Project />}>
-              <Route index element={<div>Index</div>} />
+              <Route
+                index
+                element={
+                  <Center>
+                    <Text>
+                      You can chat with your chatbot, modify the components, and
+                      share it! Get started by adding a{" "}
+                      <strong>"chat component" in the components tab</strong>,
+                      and then build on from there.
+                    </Text>
+                  </Center>
+                }
+              />
               <Route path="chat" element={<ChatLayout />}>
                 <Route path=":chatid" element={<Chat />} />
               </Route>

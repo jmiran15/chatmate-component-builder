@@ -18,7 +18,7 @@ export default function Publish() {
         if (error) {
           console.error(error);
         } else {
-          setName(data[0].name);
+          if (data.length > 0) setName(data[0].name);
         }
       });
   }, [projectId]);

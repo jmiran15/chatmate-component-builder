@@ -1,6 +1,14 @@
 import React from "react";
 import { ProjectCard } from "../../componentsv2/ProjectCard";
-import { Stack, Button, Modal, TextInput } from "@mantine/core";
+import {
+  Stack,
+  Button,
+  Modal,
+  TextInput,
+  Card,
+  Center,
+  Text,
+} from "@mantine/core";
 import "react-tiny-fab/dist/styles.css";
 import { supabaseClient } from "../../utilsv2/supabase";
 import { v4 as uuidv4 } from "uuid";
@@ -78,6 +86,14 @@ export default function Projects() {
       >
         Create a new project
       </Button>
+
+      {projects.length === 0 && (
+        <Card withBorder radius="md" padding="xl">
+          <Center>
+            <Text size="lg">No projects yet</Text>
+          </Center>
+        </Card>
+      )}
       {projects.map((project) => (
         <ProjectCard key={project.id} project={project} />
       ))}
