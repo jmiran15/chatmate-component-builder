@@ -341,14 +341,14 @@ export default function Chat() {
         spacing="xs"
         w="100%"
         style={{
-          overflowY: "scroll",
+          overflowY: "auto",
         }}
       >
         <Checkbox
           style={{
             alignSelf: "flex-start",
           }}
-          label="verbose"
+          label="Show intermediate steps"
           checked={isVerbose}
           onChange={(e) => setIsVerbose(e.currentTarget.checked)}
         />
@@ -479,10 +479,11 @@ function ChatInput({
   sendQuery: () => void;
 }) {
   return (
-    <Grid w="100%" m={0}>
-      <Grid.Col span="auto">
+    <Grid w="100%" m={0} p={0}>
+      <Grid.Col span="auto" p={0} mr="sm">
         <Textarea
           autosize
+          size="md"
           minRows={2}
           maxRows={5}
           placeholder="Type your message"
@@ -490,8 +491,15 @@ function ChatInput({
           onChange={(e) => setQuery(e.currentTarget.value)}
         />
       </Grid.Col>
-      <Grid.Col span="content">
-        <Button onClick={async () => await sendQuery()}>Send</Button>
+      <Grid.Col span="content" p={0}>
+        <Button
+          color="blue.9"
+          size="md"
+          radius="md"
+          onClick={async () => await sendQuery()}
+        >
+          Send
+        </Button>
       </Grid.Col>
     </Grid>
   );

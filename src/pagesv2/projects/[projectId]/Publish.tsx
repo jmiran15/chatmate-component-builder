@@ -1,13 +1,27 @@
 import { Stack, Group, Text, TextInput, Button } from "@mantine/core";
 import { supabaseClient } from "../../../utilsv2/supabase";
 import { useAuth } from "@clerk/clerk-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 export default function Publish() {
   const [name, setName] = useState("");
   const { userId } = useAuth();
   const { projectId } = useParams();
+
+  useEffect(() => {
+    supabaseClient
+      .from("published")
+      .select("*")
+      .eq("project", projectId)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error(error);
+        } else {
+          setName(data[0].name);
+        }
+      });
+  }, [projectId]);
 
   async function handlePublish() {
     // upsert into the published table
@@ -21,7 +35,7 @@ export default function Publish() {
   }
 
   return (
-    <Stack align="flex-start">
+    <Stack align="flex-start" w="100%">
       <Group spacing="xs">
         <Text color="dimmed">https://www.chatmate.dev/b/</Text>
         <TextInput

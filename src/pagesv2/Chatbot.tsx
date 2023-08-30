@@ -6,7 +6,9 @@ import {
   Stack,
   Textarea,
   Badge,
-  Checkbox,
+  Text,
+  Center,
+  Card,
 } from "@mantine/core";
 import { OpenAIStream } from "ai";
 import { ProjectContext } from "../contextv2/project";
@@ -324,7 +326,14 @@ export default function Chatbot() {
   }
 
   return (
-    <Stack w="100%" align="center" justify="space-between" h="80vh">
+    <Stack
+      w="100%"
+      h="100vh"
+      align="center"
+      justify="space-between"
+      px={200}
+      py="xl"
+    >
       <Stack
         spacing="xs"
         w="100%"
@@ -332,14 +341,16 @@ export default function Chatbot() {
           overflowY: "scroll",
         }}
       >
-        <Checkbox
-          style={{
-            alignSelf: "flex-start",
-          }}
-          label="verbose"
-          checked={isVerbose}
-          onChange={(e) => setIsVerbose(e.currentTarget.checked)}
-        />
+        {messages.length === 0 && (
+          <Card withBorder radius="md" padding="xl">
+            <Center>
+              <Text>
+                You are chatting with <strong>{chatbotName}</strong> chatbot.
+                Send a message to start the conversation!
+              </Text>
+            </Center>
+          </Card>
+        )}
         <Messages
           messages={messages}
           state={state}
@@ -472,6 +483,7 @@ function ChatInput({
         <Textarea
           autosize
           minRows={2}
+          size="md"
           maxRows={5}
           placeholder="Type your message"
           value={query}
@@ -479,7 +491,14 @@ function ChatInput({
         />
       </Grid.Col>
       <Grid.Col span="content">
-        <Button onClick={async () => await sendQuery()}>Send</Button>
+        <Button
+          color="blue.9"
+          size="md"
+          radius="md"
+          onClick={async () => await sendQuery()}
+        >
+          Send
+        </Button>
       </Grid.Col>
     </Grid>
   );

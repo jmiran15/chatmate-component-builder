@@ -45,10 +45,18 @@ export default function Settings() {
         onChange={(e) => setName(e.target.value)}
       />
       <Group position="apart">
-        <Button onClick={handleDelete} color="red" variant="light">
+        <Button
+          color="red.9"
+          size="md"
+          radius="md"
+          onClick={handleDelete}
+          variant="light"
+        >
           Delete project
         </Button>
-        <Button onClick={handleSave}>Save</Button>
+        <Button color="blue.9" size="md" radius="md" onClick={handleSave}>
+          Save
+        </Button>
       </Group>
     </Stack>
   );

@@ -58,6 +58,8 @@ const Publish = Loadable(
 
 const Chatbot = Loadable(lazy(() => import("./pagesv2/Chatbot.tsx")));
 
+const Discover = Loadable(lazy(() => import("./pagesv2/Discover.tsx")));
+
 if (!process.env.REACT_APP_CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
@@ -224,7 +226,7 @@ function ClerkProviderWithRoutes() {
         <Route path="/" element={<Shell />}>
           <Route index element={<Landing />} />
           <Route path="/examples" element={<div>Examples</div>} />
-          <Route path="/discover" element={<div>Discover</div>} />
+          <Route path="/discover" element={<Discover />} />
           <Route
             path="/sign-in/*"
             element={

@@ -4,6 +4,7 @@ import { NavLink, Outlet, useParams } from "react-router-dom";
 import { ProjectContext } from "../../../contextv2/project";
 import { Project as ProjectContextType } from "../../../contextv2/project";
 import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
+import { Flex, useMantineTheme, Center } from "@mantine/core";
 
 export default function Project() {
   const { projectId } = useParams();
@@ -18,10 +19,12 @@ export default function Project() {
     console.log("set the project");
   }, [projectId, setGlobalProject]);
 
+  const theme = useMantineTheme();
+
   return (
-    <div style={{ display: "flex", height: "100%", minHeight: "400px" }}>
+    <Flex h="100%" w="100%">
       <Sidebar>
-        <div>{project}</div>
+        {/* <div>{project}</div> */}
         <Menu>
           <MenuItem component={<NavLink to="chat" />}>Chat</MenuItem>
           <MenuItem component={<NavLink to="components" />}>
@@ -35,7 +38,9 @@ export default function Project() {
           <MenuItem component={<NavLink to="settings" />}>Settings</MenuItem>
         </Menu>
       </Sidebar>
-      <Outlet />
-    </div>
+      <Center p="xl" w="100%">
+        <Outlet />
+      </Center>
+    </Flex>
   );
 }

@@ -96,35 +96,43 @@ export default function ChatLayout() {
           <Center w="100%" h="100%">
             <Stack>
               <Text>Create a new chat or select a chat</Text>
-              <Button onClick={handleNewChat}>Create a new chat</Button>
+              <Button
+                color="blue.9"
+                size="md"
+                radius="md"
+                onClick={handleNewChat}
+              >
+                Create a new chat
+              </Button>
             </Stack>
           </Center>
         </Card>
       )}
-      <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-        <Stack
-          px="md"
-          w="300px"
-          spacing="xs"
-          style={{
-            overflowY: "scroll",
-          }}
-        >
-          <Button onClick={handleNewChat}>Create a new chat</Button>
-          {chats.length > 0 ? (
-            chats.map((chat) => (
-              <Link
-                key={chat.id}
-                chat={chat}
-                setChats={setChats}
-                projectId={projectId}
-              />
-            ))
-          ) : (
-            <p>no chats yet</p>
-          )}
-        </Stack>
-      </MediaQuery>
+      <Stack
+        px="md"
+        w="300px"
+        h="100%"
+        spacing="xs"
+        style={{
+          overflowY: "auto",
+        }}
+      >
+        <Button size="md" color="blue.9" radius="md" onClick={handleNewChat}>
+          Create a new chat
+        </Button>
+        {chats.length > 0 ? (
+          chats.map((chat) => (
+            <Link
+              key={chat.id}
+              chat={chat}
+              setChats={setChats}
+              projectId={projectId}
+            />
+          ))
+        ) : (
+          <p>no chats yet</p>
+        )}
+      </Stack>
     </Flex>
   );
 }

@@ -37,6 +37,7 @@
     "react-pro-sidebar": "^1.1.0-alpha.1",
     "react-router-dom": "^6.14.1",
     "react-scripts": "5.0.1",
+    "react-shepherd": "^4.2.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-tiny-fab": "^4.0.4",
     "rehype-raw": "^6.1.1",
